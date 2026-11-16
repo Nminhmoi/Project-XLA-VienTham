@@ -1,0 +1,29 @@
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# IDE / Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large remote sensing / GIS files in data (giữ lại cấu trúc thư mục nhờ .gitkeep)
+# Bỏ comment nếu bạn muốn bỏ qua ảnh vệ tinh nặng (.tif, .nc, .hdf, .zip, v.v.):
+# data/*
+# !data/.gitkeep
