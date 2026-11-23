@@ -28,3 +28,6 @@ Thumbs.db
 # Large remote sensing/GIS data is shared separately (for example, through Drive).
 data/*
 !data/.gitkeep
+!data/outputs/
+data/outputs/*
+!data/outputs/.gitkeep
