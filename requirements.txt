@@ -1,0 +1,16 @@
+# Raster analysis and coordinate transformations
+numpy
+rasterio
+pyproj
+
+# YOLO object detection and image handling
+ultralytics
+opencv-python
+
+# Notebook visualization
+jupyter
+matplotlib
+
+# TiTiler COG API
+titiler.application
+uvicorn[standard]
