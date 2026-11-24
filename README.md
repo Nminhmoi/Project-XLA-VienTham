@@ -371,11 +371,13 @@ Checklist:
 | Hạng mục | Trạng thái | Ghi chú |
 | :--- | :---: | :--- |
 | Orthomosaic Metashape | ✅ Xong | `data/orthomosaic/multispectral_ortho.tif` (5 band phổ + alpha) |
-| COG 5 band UTM | ✅ Xong | `data/outputs/cog_multispectral.tif` — EPSG:32630, pixel 0.0413 m, mask nội bộ ~75,6% diện tích hợp lệ |
+| COG 5 band UTM | ✅ Xong | `data/outputs/cog_multispectral.tif` — EPSG:32630, pixel 0.0413 m, mask nội bộ ~75,0% diện tích hợp lệ (alpha nguồn ~75,6%) |
 | Band order | ✅ Chốt | 1 = Blue, 2 = Green, 3 = Red, 4 = RedEdge, 5 = NIR |
-| YOLO Detection | ✅ Xong | Đã có `scripts/02_yolo_drone_detection.py` + `data/outputs/detections.geojson` |
+| YOLO Detection | 🔄 Pipeline xong, kết quả baseline | Có `scripts/02_yolo_drone_detection.py` + `data/outputs/detections.geojson` (12 box `person` **chưa kiểm chứng**, đa số là false positive do domain gap — xem `docs/yolo_qa.md`) |
 | NDVI/NDRE/LULC | ⬜ Chưa | Cần script + `lulc_summary.json` |
 | WebGIS Dashboard | ⬜ Chưa | Cần `web/index.html` + Leaflet |
+
+> **Lưu ý YOLO:** pipeline đã chạy được (tiling → inference → NMS → pixel→GPS → GeoJSON đúng schema), nhưng 12 box `person` là kết quả **baseline COCO chưa kiểm chứng**. Kiểm tra thủ công cho thấy đa số là false positive do domain gap (kích thước 0,23–26 m, nằm trên tán lá/đất/rìa nền) — xem `docs/yolo_qa.md`. Không dùng số này làm số liệu "số người phát hiện" trong báo cáo; muốn có kết quả thực địa cần fine-tune model trên dữ liệu UAV.
 
 > Vì Giai đoạn 1 và 2 đã có sản phẩm, Ngày 1 dùng để **xác minh + script hóa** chứ không chạy lại từ đầu. Nếu buộc phải chạy lại Metashape, dồn vào Ngày 1 và báo Leader ngay để không chặn 3 nhánh còn lại.
 
@@ -461,9 +463,9 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 | :---: | :--- | :--- | :---: |
 | 01 | • Cài `ultralytics`, tải weights mô hình YOLO.<br>• Test inference ảnh mẫu trên CPU. | `docs/yolo_setup.md`; môi trường chạy tốt trên CPU. | ✅ |
 | 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 15% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
-| 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS toàn diện (`02_yolo_drone_detection.py`). | ✅ |
-| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet). | ✅ |
-| 05 | • QA: lọc box nền NoData, khử trùng lặp, thống kê 12 đối tượng theo lớp (`conf=0.25`). | `docs/yolo_qa.md` (báo cáo QA + ảnh `detections_visualized.jpg`). | ✅ |
+| 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS (**baseline, chưa kiểm chứng thực địa**; xem `docs/yolo_qa.md`). | ✅ |
+| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet; box là baseline chưa kiểm chứng). | ✅ |
+| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` (báo cáo QA + ảnh `detections_visualized.jpg`; kết luận 12 box `person` là false positive do domain gap). | ✅ |
 | 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo chi tiết trong `Docs/KeHoach_PhanChia_Va_HuongXuLy_Hinh.docx`. | ✅ |
 | 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
 
