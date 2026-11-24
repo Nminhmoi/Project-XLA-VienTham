@@ -13,7 +13,7 @@ Raster **không nằm trong Git** (`.gitignore` loại `data/*` để tránh đ�
 | Orthomosaic nguồn | `data/orthomosaic/multispectral_ortho.tif` | 280.159.231 bytes |
 | COG phân tích | `data/outputs/cog_multispectral.tif` | 178.894.282 bytes |
 
-- **Link chia sẻ dữ liệu:** _cần điền (Drive/OneDrive của nhóm)_ — dữ liệu không tự có sau khi clone.
+- **Link chia sẻ dữ liệu:** https://drive.google.com/drive/folders/1utZOlnebbJuRFI5CFB2lojtcmggOzom6 — thư mục Drive của nhóm, dữ liệu không tự có sau khi clone. Cần quyền truy cập cho cả 5 thành viên trước cuối Ngày 1.
 - Kích thước file chỉ để phát hiện tải thiếu/hỏng; nếu lệch đáng kể thì tải lại trước khi chạy pipeline.
 - Điều kiện tiên quyết của sprint: COG phải có mặt **trước cuối Ngày 1** vì cả 3 nhánh kỹ thuật đều đọc từ file này.
 
