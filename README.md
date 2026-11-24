@@ -278,7 +278,7 @@ Checklist:
 | Số band | 5 (Blue, Green, Red, RedEdge, NIR) |
 | CRS | EPSG:32630 |
 | Pixel size | 0.0413 m |
-| Mask | PER_DATASET, ~75,6% diện tích hợp lệ |
+| Mask | PER_DATASET, ~75,0% diện tích COG hợp lệ (alpha nguồn ~75,6%) |
 | Nén / Layout | DEFLATE + PREDICTOR=2 / COG, tile 512 |
 | Overviews | 4 mức (2209 → 276 px) |
 | Dung lượng | ~179 MB |
