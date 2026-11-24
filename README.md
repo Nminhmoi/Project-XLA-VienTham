@@ -28,7 +28,7 @@ Dự án **ưu tiên sử dụng một bộ dữ liệu UAV đa phổ chính** x
              └──────────────────────────────────┬──────────────────────────────────┘
                                                 ↓
                      [5. Phục vụ Dữ liệu Bản đồ (TiTiler COG Tile Server)]
-                        - Dynamic RGB Tiles: bands=3,2,1
+                        - Dynamic RGB Tiles: bidx=3&bidx=2&bidx=1
                         - Dynamic NDVI Tiles: expression=(b5-b3)/(b5+b3)
                                                 ↓
                      [6. WebGIS Dashboard (HTML5 / CSS3 / Leaflet.js)]
@@ -336,16 +336,18 @@ Checklist:
 
 1. **Khởi chạy TiTiler phục vụ Dynamic Tiling cho COG 5-band:**
    ```bash
-   uvicorn titiler.application.main:app --host 0.0.0.0 --port 8000
+   scripts\run_titiler.bat          # Windows
+   bash scripts/run_titiler.sh       # macOS / Linux
    ```
-2. **Các đường dẫn Tile linh hoạt cung cấp cho Leaflet:**
+   Script tự sinh `web/tiles.json` (URL 4 lớp + `rescale` tính từ COG + bounds) rồi chạy `uvicorn titiler.application.main:app` ở cổng 8000.
+2. **Các đường dẫn Tile linh hoạt cung cấp cho Leaflet** (đã kiểm thử với TiTiler 2.4.1, chi tiết: `docs/titiler_urls.md`):
    * **Màu tự nhiên (True Color RGB):**
-     `http://localhost:8000/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=file:///PATH/cog_multispectral.tif&bands=3,2,1` (theo quy ước logic: Red, Green, Blue).
+     `http://localhost:8000/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=<COG>&bidx=3&bidx=2&bidx=1&rescale=<r>&rescale=<g>&rescale=<b>`
    * **Màu giả hồng ngoại (Color Infrared - CIR):**
-     `http://localhost:8000/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=file:///PATH/cog_multispectral.tif&bands=5,3,2` (theo quy ước logic: NIR, Red, Green).
-   * Các ví dụ trên chỉ đúng nếu thứ tự band thực tế của GeoTIFF đã được xác nhận là Blue, Green, Red, RedEdge, NIR.
+     `http://localhost:8000/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=<COG>&bidx=5&bidx=3&bidx=2&rescale=<nir>&rescale=<r>&rescale=<g>`
    * **Bản đồ nhiệt NDVI thời gian thực:**
-     `http://localhost:8000/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=file:///PATH/cog_multispectral.tif&expression=(b5-b3)/(b5+b3)&rescale=-0.2,0.8&colormap_name=rdylgn` (nếu Red = Band 3 và NIR = Band 5).
+     `http://localhost:8000/cog/tiles/WebMercatorQuad/{z}/{x}/{y}.png?url=<COG>&expression=%28b5-b3%29%2F%28b5%2Bb3%29&rescale=-0.2,0.8&colormap_name=rdylgn`
+   * `<COG>` là **đường dẫn tuyệt đối** đã URL-encode (không dùng `file:///`). Phải dùng `bidx` (TiTiler bỏ qua `bands=`), phải encode `+` thành `%2B`, và RGB/CIR phải có `rescale` vì dữ liệu là `uint16`. Không cần tự ghép URL: lấy từ `web/tiles.json`.
 
 3. **Giao diện WebGIS (HTML/CSS + Leaflet.js):**
    * **Bản đồ nền (Base Maps):** OpenStreetMap, Google Satellite.
@@ -449,17 +451,15 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| 01 | • Viết `scripts/01_gdal_cog_preprocessing.py` tái tạo COG từ ortho gốc: kiểm tra band/CRS, tách alpha → mask, bỏ band 6, reproject `EPSG:32630`, pixel 0.0413 m, xuất COG (`DEFLATE`, `PREDICTOR=2`, overviews). | Script chạy 1 lệnh tái tạo được `data/outputs/cog_multispectral.tif`. | ⬜ |
-| 02 | • Chạy TiTiler (`uvicorn titiler.application.main:app --port 8000`).<br>• Xuất 3 URL tile: RGB `bands=3,2,1`; CIR `bands=5,3,2`; NDVI `expression=(b5-b3)/(b5+b3)&rescale=-0.2,0.8&colormap_name=rdylgn`. | `docs/titiler_urls.md` (3 URL copy-paste được); server chạy `localhost:8000`. | ⬜ |
-| 03 | • Validate COG: `LAYOUT=COG`, tile 512, overviews ≥ 4 mức, mask nội bộ, `rio cogeo validate`.<br>• Viết tài liệu kỹ thuật. | `docs/cog_spec.md` (thông số COG + cách tái tạo + kết quả validate). | ⬜ |
-| 04 | • Viết `scripts/run_titiler.bat`; xử lý CORS; hỗ trợ Đức nhúng tile. | `scripts/run_titiler.bat`; 3 lớp tile load OK trong `web/index.html`. | ⬜ |
-| 05 | • Test hiệu năng tile z14–z20, đo thời gian load, sửa lỗi 404/500. | Bảng thời gian load ghi vào `docs/test_report.md`. | ⬜ |
-| 06 | • Viết mục báo cáo: Giai đoạn 2 (GDAL/COG) + cơ chế TiTiler. | Bản thảo gửi Minh + ảnh minh họa. | ⬜ |
+| 01 | • Viết `scripts/01_gdal_cog_preprocessing.py` tái tạo COG từ ortho gốc: kiểm tra band/CRS, tách alpha → mask, bỏ band 6, reproject `EPSG:32630`, pixel 0.0413 m, xuất COG (`DEFLATE`, `PREDICTOR=2`, overviews). | Script chạy 1 lệnh tái tạo được `data/outputs/cog_multispectral.tif`. | 🔄 Code xong, đã test trên dữ liệu giả lập; chờ chạy trên ortho thật |
+| 02 | • Chạy TiTiler (`uvicorn titiler.application.main:app --port 8000`).<br>• Xuất URL tile: RGB `bidx=3,2,1`; CIR `bidx=5,3,2`; NDVI `expression=(b5-b3)/(b5+b3)&rescale=-0.2,0.8&colormap_name=rdylgn` (+ NDRE). | `docs/titiler_urls.md`; `scripts/make_titiler_urls.py` → `web/tiles.json`; server chạy `localhost:8000`. | ✅ |
+| 03 | • Validate COG: `LAYOUT=COG`, tile 512, overviews ≥ 4 mức, mask nội bộ, `rio cogeo validate`.<br>• Viết tài liệu kỹ thuật. | `docs/cog_spec.md` + `scripts/validate_cog.py`. | 🔄 Còn dán kết quả validate trên COG thật |
+| 04 | • Viết `scripts/run_titiler.bat`; xử lý CORS; hỗ trợ Đức nhúng tile. | `scripts/run_titiler.bat` + `.sh`; CORS đã kiểm tra; snippet Leaflet trong `docs/titiler_urls.md`. | 🔄 Chờ `web/index.html` của Đức |
+| 05 | • Test hiệu năng tile z14–z20, đo thời gian load, sửa lỗi 404/500. | `scripts/benchmark_tiles.py` → `docs/tile_benchmark.md`, chép vào `docs/test_report.md`. | 🔄 Script xong; chờ đo trên máy demo |
+| 06 | • Viết mục báo cáo: Giai đoạn 2 (GDAL/COG) + cơ chế TiTiler. | `docs/baocao_nam_anh_gd2_titiler.md` (bản nháp). | 🔄 Còn điền số đo thật + ảnh |
 | 07 | • Trực nhánh tile khi demo. | — | ⬜ |
 
 #### 👤 Hinh — YOLO Detection
-
-> 🔄 **Đã chốt đổi hướng (24/11):** dừng YOLO-COCO `person`/`vehicle` (12 box là false positive do domain gap), chuyển sang **fine-tune nhận diện tán cọ dầu (class `palm`)** trên plot_B03. Chi tiết và checklist: **`docs/note_hinh_tan_cay.md`**. Bảng dưới đây là lịch sử nhánh cũ, giữ để đối chiếu.
 
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
@@ -467,7 +467,7 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 | 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 15% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
 | 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS (**baseline, chưa kiểm chứng thực địa**; xem `docs/yolo_qa.md`). | ✅ |
 | 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet; box là baseline chưa kiểm chứng). | ✅ |
-| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` (kết luận 12 box `person` là false positive do domain gap). | ✅ |
+| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` + ảnh `docs/figures/yolo_false_positive_crops.jpg`, `docs/figures/yolo_detections_overview.jpg` (kết luận 12 box `person` là false positive do domain gap). | ✅ |
 | 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo mục YOLO gửi Minh (Markdown) + ảnh minh họa. | 🔄 |
 | 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
 
@@ -593,7 +593,11 @@ Project_XLA_VienTham/
 │       ├── detections.geojson      # Bounding boxes YOLO định dạng GPS
 │       └── lulc_summary.json       # Kết quả thống kê diện tích LULC
 ├── scripts/
-│   ├── 01_gdal_cog_preprocessing.py # Script GDAL kiểm tra tọa độ, gán GCP và build COG
+│   ├── 01_gdal_cog_preprocessing.py # Script GDAL kiểm tra tọa độ và build COG
+│   ├── validate_cog.py              # Kiểm tra COG theo hợp đồng 4.4.A
+│   ├── make_titiler_urls.py         # Sinh web/tiles.json (URL RGB/CIR/NDVI/NDRE)
+│   ├── run_titiler.bat / .sh        # Khởi chạy TiTiler
+│   ├── benchmark_tiles.py           # Đo thời gian tải tile theo zoom
 │   ├── 02_yolo_drone_detection.py   # Script trích RGB, cắt slice, chạy YOLO & xuất GeoJSON
 │   └── 03_spectral_ndvi_analysis.py # Script tính NDVI/NDRE, phân loại LULC & tính diện tích m²
 ├── web/

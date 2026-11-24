@@ -13,4 +13,5 @@ matplotlib
 
 # TiTiler COG API
 titiler.application
+rio-cogeo
 uvicorn[standard]
