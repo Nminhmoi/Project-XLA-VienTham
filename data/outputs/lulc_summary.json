@@ -1,0 +1,63 @@
+{
+  "crs": "EPSG:32630",
+  "pixel_size_m": 0.0413,
+  "pixel_area_m2": 0.00170569,
+  "total_valid_area_ha": 2.51,
+  "total_valid_area_m2": 25068.08,
+  "total_valid_pixel_count": 14696741,
+  "excluded_pixel_count": {
+    "outside_mask": 4895985,
+    "saturated": 1114,
+    "zero_denominator": 6
+  },
+  "classes": [
+    {
+      "id": 1,
+      "name": "Cây xanh tốt",
+      "ndvi_range": [
+        0.45,
+        1.0
+      ],
+      "pixel_count": 4333469,
+      "area_m2": 7391.55,
+      "area_ha": 0.7392,
+      "percent": 29.49
+    },
+    {
+      "id": 2,
+      "name": "Thảm cỏ / cây thưa",
+      "ndvi_range": [
+        0.2,
+        0.45
+      ],
+      "pixel_count": 4945881,
+      "area_m2": 8436.14,
+      "area_ha": 0.8436,
+      "percent": 33.65
+    },
+    {
+      "id": 3,
+      "name": "Đất trống / nhà cửa",
+      "ndvi_range": [
+        0.0,
+        0.2
+      ],
+      "pixel_count": 1550740,
+      "area_m2": 2645.08,
+      "area_ha": 0.2645,
+      "percent": 10.55
+    },
+    {
+      "id": 4,
+      "name": "Mặt nước / trũng ẩm",
+      "ndvi_range": [
+        -1.0,
+        0.0
+      ],
+      "pixel_count": 3866651,
+      "area_m2": 6595.31,
+      "area_ha": 0.6595,
+      "percent": 26.31
+    }
+  ]
+}

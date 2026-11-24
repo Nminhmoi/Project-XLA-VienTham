@@ -1,0 +1,28 @@
+{
+  "input": "data/outputs/cog_multispectral.tif",
+  "window": null,
+  "ndvi": {
+    "valid_pixel_count": 14696741,
+    "min": -0.6634,
+    "max": 1.0,
+    "mean": 0.2226,
+    "std": 0.3175,
+    "p2": -0.4217,
+    "p25": -0.0298,
+    "median": 0.3311,
+    "p75": 0.4725,
+    "p98": 0.6465
+  },
+  "ndre": {
+    "valid_pixel_count": 14696741,
+    "min": -0.2527,
+    "max": 0.5321,
+    "mean": 0.0338,
+    "std": 0.0725,
+    "p2": -0.1107,
+    "p25": -0.0152,
+    "median": 0.037,
+    "p75": 0.0829,
+    "p98": 0.1809
+  }
+}

@@ -38,3 +38,6 @@ data/outputs/*
 !data/outputs/.gitkeep
 !data/outputs/*.geojson
 !data/outputs/*.json
+
+# Raw drone images (shared via Drive)
+plot_B03/
