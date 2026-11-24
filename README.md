@@ -429,65 +429,67 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 ### 4.3. Phân công chi tiết theo từng thành viên
 
+> Cột **Xong**: ✅ hoàn thành, 🔄 đang làm, ⬜ chưa bắt đầu. Mỗi thành viên tự cập nhật sau khi hoàn thành việc của ngày tương ứng (kèm output đã bàn giao).
+
 #### 👤 Minh — Leader (dữ liệu gốc, điều phối, báo cáo)
 
-| Ngày | Việc cụ thể | Output bàn giao |
-| :---: | :--- | :--- |
-| 01 | • Chạy `gdalinfo -stats` xác minh `multispectral_ortho.tif` và `cog_multispectral.tif` (5 band, EPSG:32630, pixel 0.0413 m, mask).<br>• Tạo skeleton repo: `scripts/`, `web/css/`, `web/js/`, `docs/`, `data/outputs/`.<br>• Viết `requirements.txt`.<br>• Phát dữ liệu + link repo cho nhóm. | `docs/band_order.md` (bảng band, CRS, pixel size, mask); `requirements.txt`; cấu trúc thư mục chuẩn. |
-| 02 | • Viết **hợp đồng dữ liệu** (schema `detections.geojson`, `lulc_summary.json`).<br>• Review script của Nam Anh, Hinh, Quang Anh. | `docs/data_contract.md`. |
-| 03 | • Nghiệm thu **Checkpoint 1**: 3 script chạy được trên COG, có output thô. | `docs/checkpoint_01.md` (kết quả + lỗi còn lại). |
-| 04 | • Kiểm tra output đúng schema.<br>• Nghiệm thu **Checkpoint 2**. | `docs/checkpoint_02.md`. |
-| 05 | • Điều phối test end-to-end, ghi log lỗi và phân công sửa. | `docs/test_report.md`. |
-| 06 | • Ghép báo cáo từ phần chuyên môn của 4 thành viên.<br>• Rà soát số liệu, hình ảnh, chú thích bảng biểu. | `docs/BaoCao_DoAn.docx` (bản nháp ≥ 80%). |
-| 07 | • Chốt bản cuối, tổng duyệt, nộp. | `docs/BaoCao_DoAn.docx` (bản cuối). |
+| Ngày | Việc cụ thể | Output bàn giao | Xong |
+| :---: | :--- | :--- | :---: |
+| 01 | • Chạy `gdalinfo -stats` xác minh `multispectral_ortho.tif` và `cog_multispectral.tif` (5 band, EPSG:32630, pixel 0.0413 m, mask).<br>• Tạo skeleton repo: `scripts/`, `web/css/`, `web/js/`, `docs/`, `data/outputs/`.<br>• Viết `requirements.txt`.<br>• Phát dữ liệu + link repo cho nhóm. | `docs/band_order.md` (bảng band, CRS, pixel size, mask); `requirements.txt`; cấu trúc thư mục chuẩn. | ✅ |
+| 02 | • Viết **hợp đồng dữ liệu** (schema `detections.geojson`, `lulc_summary.json`).<br>• Review script của Nam Anh, Hinh, Quang Anh. | `docs/data_contract.md`. | ⬜ |
+| 03 | • Nghiệm thu **Checkpoint 1**: 3 script chạy được trên COG, có output thô. | `docs/checkpoint_01.md` (kết quả + lỗi còn lại). | ⬜ |
+| 04 | • Kiểm tra output đúng schema.<br>• Nghiệm thu **Checkpoint 2**. | `docs/checkpoint_02.md`. | ⬜ |
+| 05 | • Điều phối test end-to-end, ghi log lỗi và phân công sửa. | `docs/test_report.md`. | ⬜ |
+| 06 | • Ghép báo cáo từ phần chuyên môn của 4 thành viên.<br>• Rà soát số liệu, hình ảnh, chú thích bảng biểu. | `docs/BaoCao_DoAn.docx` (bản nháp ≥ 80%). | ⬜ |
+| 07 | • Chốt bản cuối, tổng duyệt, nộp. | `docs/BaoCao_DoAn.docx` (bản cuối). | ⬜ |
 
 #### 👤 Nam Anh — GDAL/COG + TiTiler
 
-| Ngày | Việc cụ thể | Output bàn giao |
-| :---: | :--- | :--- |
-| 01 | • Viết `scripts/01_gdal_cog_preprocessing.py` tái tạo COG từ ortho gốc: kiểm tra band/CRS, tách alpha → mask, bỏ band 6, reproject `EPSG:32630`, pixel 0.0413 m, xuất COG (`DEFLATE`, `PREDICTOR=2`, overviews). | Script chạy 1 lệnh tái tạo được `data/outputs/cog_multispectral.tif`. |
-| 02 | • Chạy TiTiler (`uvicorn titiler.application.main:app --port 8000`).<br>• Xuất 3 URL tile: RGB `bands=3,2,1`; CIR `bands=5,3,2`; NDVI `expression=(b5-b3)/(b5+b3)&rescale=-0.2,0.8&colormap_name=rdylgn`. | `docs/titiler_urls.md` (3 URL copy-paste được); server chạy `localhost:8000`. |
-| 03 | • Validate COG: `LAYOUT=COG`, tile 512, overviews ≥ 4 mức, mask nội bộ, `rio cogeo validate`.<br>• Viết tài liệu kỹ thuật. | `docs/cog_spec.md` (thông số COG + cách tái tạo + kết quả validate). |
-| 04 | • Viết `scripts/run_titiler.bat`; xử lý CORS; hỗ trợ Đức nhúng tile. | `scripts/run_titiler.bat`; 3 lớp tile load OK trong `web/index.html`. |
-| 05 | • Test hiệu năng tile z14–z20, đo thời gian load, sửa lỗi 404/500. | Bảng thời gian load ghi vào `docs/test_report.md`. |
-| 06 | • Viết mục báo cáo: Giai đoạn 2 (GDAL/COG) + cơ chế TiTiler. | Bản thảo gửi Minh + ảnh minh họa. |
-| 07 | • Trực nhánh tile khi demo. | — |
+| Ngày | Việc cụ thể | Output bàn giao | Xong |
+| :---: | :--- | :--- | :---: |
+| 01 | • Viết `scripts/01_gdal_cog_preprocessing.py` tái tạo COG từ ortho gốc: kiểm tra band/CRS, tách alpha → mask, bỏ band 6, reproject `EPSG:32630`, pixel 0.0413 m, xuất COG (`DEFLATE`, `PREDICTOR=2`, overviews). | Script chạy 1 lệnh tái tạo được `data/outputs/cog_multispectral.tif`. | ⬜ |
+| 02 | • Chạy TiTiler (`uvicorn titiler.application.main:app --port 8000`).<br>• Xuất 3 URL tile: RGB `bands=3,2,1`; CIR `bands=5,3,2`; NDVI `expression=(b5-b3)/(b5+b3)&rescale=-0.2,0.8&colormap_name=rdylgn`. | `docs/titiler_urls.md` (3 URL copy-paste được); server chạy `localhost:8000`. | ⬜ |
+| 03 | • Validate COG: `LAYOUT=COG`, tile 512, overviews ≥ 4 mức, mask nội bộ, `rio cogeo validate`.<br>• Viết tài liệu kỹ thuật. | `docs/cog_spec.md` (thông số COG + cách tái tạo + kết quả validate). | ⬜ |
+| 04 | • Viết `scripts/run_titiler.bat`; xử lý CORS; hỗ trợ Đức nhúng tile. | `scripts/run_titiler.bat`; 3 lớp tile load OK trong `web/index.html`. | ⬜ |
+| 05 | • Test hiệu năng tile z14–z20, đo thời gian load, sửa lỗi 404/500. | Bảng thời gian load ghi vào `docs/test_report.md`. | ⬜ |
+| 06 | • Viết mục báo cáo: Giai đoạn 2 (GDAL/COG) + cơ chế TiTiler. | Bản thảo gửi Minh + ảnh minh họa. | ⬜ |
+| 07 | • Trực nhánh tile khi demo. | — | ⬜ |
 
 #### 👤 Hinh — YOLO Detection
 
-| Ngày | Việc cụ thể | Output bàn giao |
-| :---: | :--- | :--- |
-| 01 | • Cài `ultralytics`, tải `yolo11n.pt`.<br>• Test inference 1 ảnh mẫu. | `docs/yolo_setup.md`; môi trường chạy được 1 ảnh. |
-| 02 | • `scripts/02_yolo_drone_detection.py` phần 1: đọc COG → trích RGB (band 3,2,1, áp mask) → cắt tile 640×640 overlap 15% → lưu index tile (id, offset, geotransform). | Hàm `tile_raster()`; `data/outputs/tiles_index.csv`. |
-| 03 | • Chạy YOLO toàn ảnh, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.5). | `data/outputs/detections_raw.json`. |
-| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS). |
-| 05 | • QA: box nằm ngoài mask, box trùng lặp, thống kê số box theo lớp.<br>• Ghi rõ ngưỡng confidence đã dùng. | `docs/yolo_qa.md` (số lượng theo lớp + lỗi + cách xử lý). |
-| 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo gửi Minh + ảnh kết quả. |
-| 07 | • Trực nhánh AI khi demo. | — |
+| Ngày | Việc cụ thể | Output bàn giao | Xong |
+| :---: | :--- | :--- | :---: |
+| 01 | • Cài `ultralytics`, tải `yolo11n.pt`.<br>• Test inference 1 ảnh mẫu. | `docs/yolo_setup.md`; môi trường chạy được 1 ảnh. | ⬜ |
+| 02 | • `scripts/02_yolo_drone_detection.py` phần 1: đọc COG → trích RGB (band 3,2,1, áp mask) → cắt tile 640×640 overlap 15% → lưu index tile (id, offset, geotransform). | Hàm `tile_raster()`; `data/outputs/tiles_index.csv`. | ⬜ |
+| 03 | • Chạy YOLO toàn ảnh, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.5). | `data/outputs/detections_raw.json`. | ⬜ |
+| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS). | ⬜ |
+| 05 | • QA: box nằm ngoài mask, box trùng lặp, thống kê số box theo lớp.<br>• Ghi rõ ngưỡng confidence đã dùng. | `docs/yolo_qa.md` (số lượng theo lớp + lỗi + cách xử lý). | ⬜ |
+| 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo gửi Minh + ảnh kết quả. | ⬜ |
+| 07 | • Trực nhánh AI khi demo. | — | ⬜ |
 
 #### 👤 Quang Anh — NDVI/NDRE & LULC + Notebook demo
 
-| Ngày | Việc cụ thể | Output bàn giao |
-| :---: | :--- | :--- |
-| 01 | • Kiểm tra band 3/4/5; thử NDVI/NDRE trên crop 1000×1000; xử lý chia 0 + mask. | Script/notebook thử nghiệm + nhận xét khoảng giá trị NDVI. |
-| 02 | • `scripts/03_spectral_ndvi_analysis.py` phần 1: tính NDVI, NDRE toàn ảnh (Float32, áp mask). | `data/outputs/ndvi.tif`, `data/outputs/ndre.tif` + thống kê min/max/mean. |
-| 03 | • Phân ngưỡng 4 lớp LULC theo **GIAI ĐOẠN 4** (Mục 3), lưu raster Byte (1 = Cây tốt, 2 = Cỏ/thưa, 3 = Đất, 4 = Nước). | `data/outputs/lulc_class.tif`. |
-| 04 | • Tính diện tích từ pixel 0.0413 m; xuất JSON theo schema; xuất ảnh preview NDVI có colormap. | `data/outputs/lulc_summary.json`; `data/outputs/ndvi_preview.png`. |
-| 05 | • QA: tổng diện tích khớp, kiểm tra lớp nước, đối chiếu NDVI với ảnh RGB.<br>• Dựng `notebooks/04_demo_pipeline.ipynb`: đọc COG ở độ phân giải giảm, vẽ RGB/CIR/NDVI/NDRE/LULC, overlay box từ `detections.geojson`. | `docs/spectral_qa.md`; `notebooks/04_demo_pipeline.ipynb` (chạy sẵn, < 30 giây). |
-| 06 | • Viết mục báo cáo NDVI/NDRE/LULC + công thức.<br>• Xuất ảnh từ notebook vào `docs/figures/` để chèn báo cáo. | Bản thảo gửi Minh; `docs/figures/` (RGB, CIR, NDVI, LULC, detection overlay). |
-| 07 | • Trực nhánh phổ khi demo. | — |
+| Ngày | Việc cụ thể | Output bàn giao | Xong |
+| :---: | :--- | :--- | :---: |
+| 01 | • Kiểm tra band 3/4/5; thử NDVI/NDRE trên crop 1000×1000; xử lý chia 0 + mask. | Script/notebook thử nghiệm + nhận xét khoảng giá trị NDVI. | ⬜ |
+| 02 | • `scripts/03_spectral_ndvi_analysis.py` phần 1: tính NDVI, NDRE toàn ảnh (Float32, áp mask). | `data/outputs/ndvi.tif`, `data/outputs/ndre.tif` + thống kê min/max/mean. | ⬜ |
+| 03 | • Phân ngưỡng 4 lớp LULC theo **GIAI ĐOẠN 4** (Mục 3), lưu raster Byte (1 = Cây tốt, 2 = Cỏ/thưa, 3 = Đất, 4 = Nước). | `data/outputs/lulc_class.tif`. | ⬜ |
+| 04 | • Tính diện tích từ pixel 0.0413 m; xuất JSON theo schema; xuất ảnh preview NDVI có colormap. | `data/outputs/lulc_summary.json`; `data/outputs/ndvi_preview.png`. | ⬜ |
+| 05 | • QA: tổng diện tích khớp, kiểm tra lớp nước, đối chiếu NDVI với ảnh RGB.<br>• Dựng `notebooks/04_demo_pipeline.ipynb`: đọc COG ở độ phân giải giảm, vẽ RGB/CIR/NDVI/NDRE/LULC, overlay box từ `detections.geojson`. | `docs/spectral_qa.md`; `notebooks/04_demo_pipeline.ipynb` (chạy sẵn, < 30 giây). | ⬜ |
+| 06 | • Viết mục báo cáo NDVI/NDRE/LULC + công thức.<br>• Xuất ảnh từ notebook vào `docs/figures/` để chèn báo cáo. | Bản thảo gửi Minh; `docs/figures/` (RGB, CIR, NDVI, LULC, detection overlay). | ⬜ |
+| 07 | • Trực nhánh phổ khi demo. | — | ⬜ |
 
 #### 👤 Đức — WebGIS Dashboard
 
-| Ngày | Việc cụ thể | Output bàn giao |
-| :---: | :--- | :--- |
-| 01 | • `web/index.html`, `web/css/style.css`, `web/js/main.js`: Leaflet + OSM + Google Satellite, layout map + sidebar. | Khung web mở được trên trình duyệt. |
-| 02 | • Layer Control (RGB/CIR/NDVI), thanh Opacity, khung legend. | `web/js/main.js` có layer control hoạt động. |
-| 03 | • Nhúng 3 URL tile của Nam Anh; xử lý lỗi 404/CORS. | 3 lớp tile hiển thị trên bản đồ. |
-| 04 | • Load `detections.geojson`, popup (lớp, confidence, tọa độ), style marker theo lớp. | Lớp AI hiển thị + click ra popup. |
-| 05 | • Dashboard: đọc `lulc_summary.json`, vẽ bảng + biểu đồ (Chart.js). | Sidebar hiển thị tổng diện tích và % từng lớp. |
-| 06 | • Responsive, tinh chỉnh UI, quay video demo 1–2 phút. | `docs/demo_video.mp4`. |
-| 07 | • Demo chính thức. | — |
+| Ngày | Việc cụ thể | Output bàn giao | Xong |
+| :---: | :--- | :--- | :---: |
+| 01 | • `web/index.html`, `web/css/style.css`, `web/js/main.js`: Leaflet + OSM + Google Satellite, layout map + sidebar. | Khung web mở được trên trình duyệt. | ⬜ |
+| 02 | • Layer Control (RGB/CIR/NDVI), thanh Opacity, khung legend. | `web/js/main.js` có layer control hoạt động. | ⬜ |
+| 03 | • Nhúng 3 URL tile của Nam Anh; xử lý lỗi 404/CORS. | 3 lớp tile hiển thị trên bản đồ. | ⬜ |
+| 04 | • Load `detections.geojson`, popup (lớp, confidence, tọa độ), style marker theo lớp. | Lớp AI hiển thị + click ra popup. | ⬜ |
+| 05 | • Dashboard: đọc `lulc_summary.json`, vẽ bảng + biểu đồ (Chart.js). | Sidebar hiển thị tổng diện tích và % từng lớp. | ⬜ |
+| 06 | • Responsive, tinh chỉnh UI, quay video demo 1–2 phút. | `docs/demo_video.mp4`. | ⬜ |
+| 07 | • Demo chính thức. | — | ⬜ |
 
 ---
 
