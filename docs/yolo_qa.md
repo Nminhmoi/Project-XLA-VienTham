@@ -35,6 +35,10 @@ Ba con số dữ liệu đã được đối chiếu và khớp nhau hoàn toàn
 - **Kiểm tra trực quan.** Cắt ảnh nguồn tại đúng 12 bounding box và phóng to: không box nào chứa người; nội dung là tán lá, đất trống, bóng cây và vùng rìa nền trắng. Các box lớn (#3, #5, #6, #9) phủ cả vùng nền/rìa ảnh.
 - **Phân bố bất thường.** Box tập trung ở rìa ảnh và trên tán rừng — nơi mô hình COCO thường phản ứng với kết cấu/độ tương phản, không phải vị trí có đối tượng.
 - **Kết luận.** Đây là false positive do domain gap; **không sử dụng 12 box này làm số liệu nhận diện thực địa**. Giá trị của kết quả nằm ở việc chứng minh pipeline (tiling → inference → NMS → pixel→GPS → GeoJSON) chạy đúng và đúng schema.
+- **Ảnh minh họa (đã đưa vào repo):**
+  - `docs/figures/yolo_detections_overview.jpg` — 12 box vẽ trên toàn ảnh.
+  - `docs/figures/yolo_false_positive_crops.jpg` — cắt riêng từng box kèm kích thước thực tế (m).
+  - File gốc `data/outputs/detections_visualized.jpg` do script sinh ra nhưng **không nằm trong repo** (bị `.gitignore` loại `data/outputs/*`); hai ảnh trên được tạo lại từ `detections.geojson` + ảnh nguồn để dùng cho QA/báo cáo.
 
 ## 4. Phân tích giới hạn Domain Gap (Lý do lọc bỏ nhãn rác)
 - **Bản chất hiện tượng:** Mô hình YOLOv8 được tiền huấn luyện (pre-trained) trên tập dữ liệu COCO (chủ yếu là ảnh chụp phối cảnh ngang tầm mắt con người). Khi áp dụng trực tiếp mô hình này lên ảnh viễn thám UAV với góc nhìn thẳng đứng từ trên cao (nadir view) trên cánh đồng, xuất hiện sai lệch miền dữ liệu rõ rệt (**Domain Gap**).

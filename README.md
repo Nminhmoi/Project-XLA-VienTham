@@ -465,7 +465,7 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 | 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 15% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
 | 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS (**baseline, chưa kiểm chứng thực địa**; xem `docs/yolo_qa.md`). | ✅ |
 | 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet; box là baseline chưa kiểm chứng). | ✅ |
-| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` (báo cáo QA + ảnh `detections_visualized.jpg`; kết luận 12 box `person` là false positive do domain gap). | ✅ |
+| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` + ảnh `docs/figures/yolo_false_positive_crops.jpg`, `docs/figures/yolo_detections_overview.jpg` (kết luận 12 box `person` là false positive do domain gap). | ✅ |
 | 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo mục YOLO gửi Minh (Markdown) + ảnh minh họa. | 🔄 |
 | 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
 
