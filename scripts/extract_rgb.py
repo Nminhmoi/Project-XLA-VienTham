@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Step 1: Trích xuất ảnh True Color RGB từ Orthomosaic Đa phổ 5 bands.
+Step 1: Trích xuất ảnh True Color RGB từ Orthomosaic Đa phổ / COG.
 Tác giả: Dương Hữu Hinh
 Môn học: Xử lý ảnh viễn thám & WebGIS
 """
@@ -11,6 +11,32 @@ import numpy as np
 import rasterio
 from rasterio.enums import ColorInterp
 from PIL import Image
+
+def get_valid_mask(src, r_raw, g_raw, b_raw):
+    """
+    Xác định mặt nạ hợp lệ (valid mask) chuẩn:
+    1. Nếu có band 6 (Alpha mask nguồn): dùng band 6 > 0
+    2. Nếu có mask nội bộ PER_DATASET (như COG): dùng read_masks(1) > 0
+    3. Nếu có nodata khai báo: lọc theo nodata
+    4. Fallback (ảnh nguồn chưa gắn mask): lọc theo biên 0 và 65535
+    """
+    if src.count >= 6:
+        alpha = src.read(6)
+        print("  Sử dụng Mask từ Band 6 (Alpha kênh nguồn)")
+        return alpha > 0
+
+    internal_mask = src.read_masks(1)
+    if internal_mask.min() == 0:
+        print("  Sử dụng Mask nội bộ từ Raster (read_masks)")
+        return internal_mask > 0
+
+    if src.nodata is not None:
+        print(f"  Sử dụng giá trị NoData khai báo: {src.nodata}")
+        return r_raw != src.nodata
+
+    # Fallback cho trường hợp GeoTIFF 5 bands không khai báo nodata/mask
+    print("  Không có mask nội bộ: Áp dụng lọc nền biên (loại trừ giá trị 0 và 65535)")
+    return (r_raw > 0) & (r_raw < 65535) & (g_raw > 0) & (g_raw < 65535) & (b_raw > 0) & (b_raw < 65535)
 
 def extract_and_stretch_rgb(
     input_path: str,
@@ -31,13 +57,13 @@ def extract_and_stretch_rgb(
         if count < 3:
             raise ValueError(f"Ảnh cần có tối thiểu 3 bands để tạo ảnh RGB, hiện chỉ có {count} bands.")
 
-        # Quy ước dải phổ theo band_order.md: Band 1: Blue, Band 2: Green, Band 3: Red
+        # Quy ước dải phổ: Band 1: Blue, Band 2: Green, Band 3: Red
         r_raw = src.read(3)
         g_raw = src.read(2)
         b_raw = src.read(1)
 
-    # Mặt nạ lọc dữ liệu hợp lệ: loại bỏ vùng biên 65535 (bão hòa/nodata) và điểm 0
-    valid_mask = (r_raw < 65500) & (g_raw < 65500) & (b_raw < 65500) & (r_raw > 0)
+        valid_mask = get_valid_mask(src, r_raw, g_raw, b_raw)
+
     valid_ratio = (valid_mask.sum() / valid_mask.size) * 100
 
     print("Thông tin ảnh đa phổ:")
@@ -57,11 +83,6 @@ def extract_and_stretch_rgb(
     r_8u, r_min, r_max = stretch_band(r_raw, valid_mask)
     g_8u, g_min, g_max = stretch_band(g_raw, valid_mask)
     b_8u, b_min, b_max = stretch_band(b_raw, valid_mask)
-
-    print("\nChuẩn hoá dải màu (Contrast Stretch):")
-    print(f"  Kênh Đỏ (Band 3): {r_min} - {r_max}")
-    print(f"  Kênh Xanh lục (Band 2): {g_min} - {g_max}")
-    print(f"  Kênh Xanh lam (Band 1): {b_min} - {b_max}")
 
     # Cấu hình lưu trữ GeoTIFF RGB 3 kênh
     profile.update(
@@ -97,7 +118,7 @@ def extract_and_stretch_rgb(
         print(f"  Ảnh xem trước: {output_preview}")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Trích xuất và chuẩn hóa RGB từ Orthomosaic Đa phổ")
+    parser = argparse.ArgumentParser(description="Trích xuất và chuẩn hóa RGB từ Orthomosaic Đa phổ / COG")
     parser.add_argument("--input", default="data/orthomosaic/multispectral_ortho.tif", help="Đường dẫn file GeoTIFF đầu vào")
     parser.add_argument("--output-tif", default="data/outputs/ortho_rgb_3band.tif", help="Đường dẫn file GeoTIFF RGB đầu ra")
     parser.add_argument("--output-preview", default="data/outputs/ortho_rgb_preview.jpg", help="Đường dẫn file ảnh preview JPEG")

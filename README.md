@@ -460,10 +460,10 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
 | 01 | • Cài `ultralytics`, tải weights mô hình YOLO.<br>• Test inference ảnh mẫu trên CPU. | `docs/yolo_setup.md`; môi trường chạy tốt trên CPU. | ✅ |
-| 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 20% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
-| 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.45). | 47 box thô -> 34 box sau NMS toàn diện (`02_yolo_drone_detection.py`). | ✅ |
-| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet). | ✅ |
-| 05 | • QA: lọc box nền NoData, khử trùng lặp, thống kê 34 đối tượng theo lớp (`conf=0.25`). | `docs/yolo_qa.md` (báo cáo QA + ảnh `detections_visualized.jpg`). | ✅ |
+| 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 15% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
+| 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS toàn diện (`02_yolo_drone_detection.py`). | ✅ |
+| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet). | ✅ |
+| 05 | • QA: lọc box nền NoData, khử trùng lặp, thống kê 12 đối tượng theo lớp (`conf=0.25`). | `docs/yolo_qa.md` (báo cáo QA + ảnh `detections_visualized.jpg`). | ✅ |
 | 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo chi tiết trong `Docs/KeHoach_PhanChia_Va_HuongXuLy_Hinh.docx`. | ✅ |
 | 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
 

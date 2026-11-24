@@ -24,6 +24,9 @@ ENV/
 # OS files
 .DS_Store
 Thumbs.db
+~$*
+~*
+*.tmp
 
 # Large remote sensing / GIS files in data (giữ lại cấu trúc thư mục nhờ .gitkeep)
 # Bỏ comment nếu bạn muốn bỏ qua ảnh vệ tinh nặng (.tif, .nc, .hdf, .zip, v.v.):
@@ -33,3 +36,5 @@ data/*
 !data/outputs/
 data/outputs/*
 !data/outputs/.gitkeep
+!data/outputs/*.geojson
+!data/outputs/*.json
