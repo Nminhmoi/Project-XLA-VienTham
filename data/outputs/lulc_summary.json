@@ -6,9 +6,9 @@
   "total_valid_area_m2": 25068.08,
   "total_valid_pixel_count": 14696741,
   "excluded_pixel_count": {
-    "outside_mask": 4895985,
+    "outside_mask": 4895991,
     "saturated": 1114,
-    "zero_denominator": 6
+    "zero_denominator": 0
   },
   "classes": [
     {
@@ -25,7 +25,7 @@
     },
     {
       "id": 2,
-      "name": "Thảm cỏ / cây thưa",
+      "name": "Thảm cỏ / cây bụi",
       "ndvi_range": [
         0.2,
         0.45
@@ -37,7 +37,7 @@
     },
     {
       "id": 3,
-      "name": "Đất trống / nhà cửa",
+      "name": "Thực vật thưa / khô",
       "ndvi_range": [
         0.0,
         0.2
@@ -49,7 +49,7 @@
     },
     {
       "id": 4,
-      "name": "Mặt nước / trũng ẩm",
+      "name": "Đất trống / đất lộ",
       "ndvi_range": [
         -1.0,
         0.0

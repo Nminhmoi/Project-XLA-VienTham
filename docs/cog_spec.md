@@ -48,7 +48,29 @@ Script kiểm tra 16 mục và trả mã thoát 1 nếu có mục không đạt:
 - bất biến: pixel ngoài mask = 0 ở mọi band; không có pixel hợp lệ nào bằng 0 ở cả 5 band.
 
 `python scripts/validate_cog.py --markdown` in thẳng bảng kết quả để dán vào báo cáo.
+Kết quả `validate_cog.py` cho `data/outputs/cog_multispectral.tif`:
 
+| Mục | Giá trị | Đạt |
+| :--- | :--- | :---: |
+| rio cogeo validate | hợp lệ | ✅ |
+| LAYOUT | COG | ✅ |
+| COMPRESSION | DEFLATE | ✅ |
+| PREDICTOR | 2 | ✅ |
+| Block (tile) | 512x512 | ✅ |
+| Overviews | 4 mức [2, 4, 8, 16] | ✅ |
+| Số band | 5 | ✅ |
+| Description | Blue, Green, Red, RedEdge, NIR | ✅ |
+| Kiểu dữ liệu | uint16 | ✅ |
+| CRS | EPSG:32630 | ✅ |
+| Pixel size | 0.041300 x 0.041300 m | ✅ |
+| Kích thước | 4419 x 4434 px | ✅ |
+| Mask Flags | PER_DATASET x5 | ✅ |
+| Tỷ lệ pixel hợp lệ | 75.01% (14,697,855 / 19,593,846) | ✅ |
+| Pixel ngoài mask khác 0 | 0 | ✅ |
+| Pixel trong mask = 0 ở mọi band | 0 | ✅ |
+| Dung lượng | 178.9 MB | ✅ |
+
+KẾT LUẬN: ĐẠT
 ### 3.1. Kết quả trên dữ liệu thử (giả lập)
 
 Chạy trên ortho giả lập có cùng cấu trúc với file thật (4396 × 4411 px, 6 band uint16, EPSG:4326, alpha band 6, nền trắng 65535):

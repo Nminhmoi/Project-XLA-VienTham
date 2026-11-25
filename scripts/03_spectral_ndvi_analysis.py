@@ -39,9 +39,9 @@ BAND_RED, BAND_REDEDGE, BAND_NIR = 3, 4, 5
 #   NDVI > 0.45 -> 1 ; 0.20 <= NDVI <= 0.45 -> 2 ; 0 <= NDVI < 0.20 -> 3 ; NDVI < 0 -> 4
 LULC_CLASSES = [
     (1, "Cây xanh tốt", [0.45, 1.0]),
-    (2, "Thảm cỏ / cây thưa", [0.20, 0.45]),
-    (3, "Đất trống / nhà cửa", [0.00, 0.20]),
-    (4, "Mặt nước / trũng ẩm", [-1.0, 0.00]),
+    (2, "Thảm cỏ / cây bụi", [0.20, 0.45]),
+    (3, "Thực vật thưa / khô", [0.00, 0.20]),
+    (4, "Đất trống / đất lộ", [-1.0, 0.00]),
 ]
 LULC_NODATA = 0
 
@@ -187,7 +187,7 @@ def run(input_path: Path, outdir: Path, window: Window | None = None,
     with rasterio.open(outdir / "lulc_class.tif", "w",
                        **{**base, "dtype": "uint8", "nodata": LULC_NODATA, "predictor": 2}) as dst:
         dst.write(cls, 1)
-        dst.set_band_description(1, "LULC: 1 Cay tot, 2 Co/thua, 3 Dat, 4 Nuoc")
+        dst.set_band_description(1, "LULC: 1 Cay tot, 2 Co/bui, 3 Thuc vat thua, 4 Dat")
         dst.write_colormap(1, {0: (0, 0, 0, 0), 1: (26, 150, 65, 255), 2: (166, 217, 106, 255),
                                3: (215, 160, 90, 255), 4: (43, 131, 186, 255)})
 
