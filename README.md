@@ -23,7 +23,7 @@ Dự án **ưu tiên sử dụng một bộ dữ liệu UAV đa phổ chính** x
   [3. Nhánh Phân tích phổ & LULC]                                    [4. Nhánh AI - Object Detection]
    • Trích kênh Red (Band 3) & NIR (Band 5)                           • Trích kênh RGB (Bands 1, 2, 3)
    • Tính chỉ số NDVI & NDRE                                          • Cắt ảnh cửa sổ trượt (Tiling/SAHI)
-   • Phân ngưỡng LULC (Cây khỏe, Cây thưa, Đất, Nước)                 • Dự đoán bằng YOLO (xe cộ, nhà cửa,...)
+   • Phân ngưỡng LULC (Cây tốt, Cỏ/bụi, Thưa/khô, Đất lộ)             • Dự đoán bằng YOLO (xe cộ, nhà cửa,...)
    • Tính diện tích thực tế (m² / ha) theo GSD                        • Ánh xạ tọa độ: Pixel -> GPS (GeoJSON)
              └──────────────────────────────────┬──────────────────────────────────┘
                                                 ↓
@@ -320,9 +320,9 @@ Checklist:
 
 2. **Phân loại lớp phủ mặt đất (LULC Thresholding):**
    * $\text{NDVI} > 0.45$: **Cây xanh tốt / Rừng / Tán cây dày**
-   * $0.20 \le \text{NDVI} \le 0.45$: **Thảm cỏ / Cây trồng thưa**
-   * $0.00 \le \text{NDVI} < 0.20$: **Đất trống / Đường giao thông / Nhà cửa**
-   * $\text{NDVI} < 0.00$: **Mặt nước / Vùng trũng ẩm**
+   * $0.20 \le \text{NDVI} \le 0.45$: **Thảm cỏ / Cây bụi**
+   * $0.00 \le \text{NDVI} < 0.20$: **Thực vật thưa / khô**
+   * $\text{NDVI} < 0.00$: **Đất trống / Đất lộ** *(cập nhật từ nhãn mặc định "Mặt nước / Vùng trũng ẩm" sau khi kiểm tra phổ thực tế trên plot_B03)*
 
 3. **Tính diện tích thực tế ($m^2$ và Héc-ta):**
    * Đọc độ phân giải mặt đất (Pixel size: $\Delta X, \Delta Y$ tính bằng mét từ hệ UTM):
@@ -375,8 +375,8 @@ Checklist:
 | Orthomosaic Metashape | ✅ Xong | `data/orthomosaic/multispectral_ortho.tif` (5 band phổ + alpha) |
 | COG 5 band UTM | ✅ Xong | `data/outputs/cog_multispectral.tif` — EPSG:32630, pixel 0.0413 m, mask nội bộ ~75,0% diện tích hợp lệ (alpha nguồn ~75,6%) |
 | Band order | ✅ Chốt | 1 = Blue, 2 = Green, 3 = Red, 4 = RedEdge, 5 = NIR |
-| YOLO Detection | 🔄 Pipeline xong, kết quả baseline | Có `scripts/02_yolo_drone_detection.py` + `data/outputs/detections.geojson` (12 box `person` **chưa kiểm chứng**, đa số là false positive do domain gap — xem `docs/yolo_qa.md`) |
-| NDVI/NDRE/LULC | ⬜ Chưa | Cần script + `lulc_summary.json` |
+| YOLO Detection | 🔄 Xong baseline pipeline; đang chuyển sang `palm` | Đã có `scripts/02_yolo_drone_detection.py`, `scripts/extract_rgb.py`, `scripts/test_outputs.py` và `data/outputs/detections.geojson` (12 box `person` baseline là false positive do domain gap — xem `docs/yolo_qa.md`). Đã chốt đổi hướng sang fine-tune tán cọ dầu (`palm`) theo `docs/note_hinh_tan_cay.md` (chưa train/xuất kết quả mới) |
+| NDVI/NDRE/LULC | ✅ Xong script & output (còn notebook demo) | `scripts/03_spectral_ndvi_analysis.py`, `lulc_summary.json`, `spectral_stats.json`, `ndvi.tif`, `ndre.tif`, `lulc_class.tif`, `ndvi_preview.png` (`2.51 ha`) |
 | WebGIS Dashboard | ⬜ Chưa | Cần `web/index.html` + Leaflet |
 
 > **Lưu ý YOLO:** pipeline đã chạy được (tiling → inference → NMS → pixel→GPS → GeoJSON đúng schema), nhưng 12 box `person` là kết quả **baseline COCO chưa kiểm chứng**. Kiểm tra thủ công cho thấy đa số là false positive do domain gap (kích thước 0,23–26 m, nằm trên tán lá/đất/rìa nền) — xem `docs/yolo_qa.md`. Không dùng số này làm số liệu "số người phát hiện" trong báo cáo; muốn có kết quả thực địa cần fine-tune model trên dữ liệu UAV.
@@ -451,9 +451,9 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| 01 | • Viết `scripts/01_gdal_cog_preprocessing.py` tái tạo COG từ ortho gốc: kiểm tra band/CRS, tách alpha → mask, bỏ band 6, reproject `EPSG:32630`, pixel 0.0413 m, xuất COG (`DEFLATE`, `PREDICTOR=2`, overviews). | Script chạy 1 lệnh tái tạo được `data/outputs/cog_multispectral.tif`. | 🔄 Code xong, đã test trên dữ liệu giả lập; chờ chạy trên ortho thật |
+| 01 | • Viết `scripts/01_gdal_cog_preprocessing.py` tái tạo COG từ ortho gốc: kiểm tra band/CRS, tách alpha → mask, bỏ band 6, reproject `EPSG:32630`, pixel 0.0413 m, xuất COG (`DEFLATE`, `PREDICTOR=2`, overviews). | Script chạy 1 lệnh tái tạo được `data/outputs/cog_multispectral.tif` (đã tái tạo trên ortho thật, `178.9 MB`). | ✅ |
 | 02 | • Chạy TiTiler (`uvicorn titiler.application.main:app --port 8000`).<br>• Xuất URL tile: RGB `bidx=3,2,1`; CIR `bidx=5,3,2`; NDVI `expression=(b5-b3)/(b5+b3)&rescale=-0.2,0.8&colormap_name=rdylgn` (+ NDRE). | `docs/titiler_urls.md`; `scripts/make_titiler_urls.py` → `web/tiles.json`; server chạy `localhost:8000`. | ✅ |
-| 03 | • Validate COG: `LAYOUT=COG`, tile 512, overviews ≥ 4 mức, mask nội bộ, `rio cogeo validate`.<br>• Viết tài liệu kỹ thuật. | `docs/cog_spec.md` + `scripts/validate_cog.py`. | 🔄 Còn dán kết quả validate trên COG thật |
+| 03 | • Validate COG: `LAYOUT=COG`, tile 512, overviews ≥ 4 mức, mask nội bộ, `rio cogeo validate`.<br>• Viết tài liệu kỹ thuật. | `docs/cog_spec.md` (đã dán bảng kết quả validate COG thật: ĐẠT) + `scripts/validate_cog.py`. | ✅ |
 | 04 | • Viết `scripts/run_titiler.bat`; xử lý CORS; hỗ trợ Đức nhúng tile. | `scripts/run_titiler.bat` + `.sh`; CORS đã kiểm tra; snippet Leaflet trong `docs/titiler_urls.md`. | 🔄 Chờ `web/index.html` của Đức |
 | 05 | • Test hiệu năng tile z14–z20, đo thời gian load, sửa lỗi 404/500. | `scripts/benchmark_tiles.py` → `docs/tile_benchmark.md`, chép vào `docs/test_report.md`. | 🔄 Script xong; chờ đo trên máy demo |
 | 06 | • Viết mục báo cáo: Giai đoạn 2 (GDAL/COG) + cơ chế TiTiler. | `docs/baocao_nam_anh_gd2_titiler.md` (bản nháp). | 🔄 Còn điền số đo thật + ảnh |
@@ -461,27 +461,25 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 #### 👤 Hinh — YOLO Detection
 
-> 🔄 **Đã chốt đổi hướng (24/11):** dừng YOLO-COCO `person`/`vehicle` (12 box là false positive do domain gap), chuyển sang **fine-tune nhận diện tán cọ dầu (class `palm`)** trên plot_B03. Chi tiết và checklist: **`docs/note_hinh_tan_cay.md`**. Bảng dưới đây là lịch sử nhánh cũ, giữ để đối chiếu.
+> 🔄 **Đã chốt đổi hướng (24/11):** dừng YOLO-COCO `person`/`vehicle` (12 box là false positive do domain gap, xem `docs/yolo_qa.md`), chuyển sang **fine-tune nhận diện tán cọ dầu (class `palm`)** trên plot_B03. Chi tiết và checklist: **`docs/note_hinh_tan_cay.md`**.
 
-| Ngày | Việc cụ thể | Output bàn giao | Xong |
+| Mốc | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| 01 | • Cài `ultralytics`, tải weights mô hình YOLO.<br>• Test inference ảnh mẫu trên CPU. | `docs/yolo_setup.md`; môi trường chạy tốt trên CPU. | ✅ |
-| 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 15% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
-| 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS (**baseline, chưa kiểm chứng thực địa**; xem `docs/yolo_qa.md`). | ✅ |
-| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet; box là baseline chưa kiểm chứng). | ✅ |
-| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` (kết luận 12 box `person` là false positive do domain gap). | ✅ |
-| 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo mục YOLO gửi Minh (Markdown) + ảnh minh họa. | 🔄 |
-| 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
+| Tiền đề | • Minh duyệt thêm class `palm` vào contract 4.4.B (`README.md`, `scripts/test_outputs.py`, `docs/yolo_qa.md`).<br>• Đổi tên baseline cũ sang `data/outputs/detections_person_baseline.geojson`. | Contract đồng bộ 3 nơi + giữ file baseline đối chiếu. | ⬜ |
+| M1 | • Cắt tile `640×640` overlap 15% (≥ 95% pixel hợp lệ) từ COG tái tạo; gán nhãn 15–20 tile (~400–700 tán cọ dầu, chia 80/20 theo tile). | Bộ dữ liệu `data/yolo_palm/` (`images/`, `labels/`, `data.yaml`). | ⬜ |
+| M2 | • Fine-tune `yolo11n.pt` / `yolo11s.pt` (`imgsz=640`, 60–80 epochs) trên Colab T4; đánh giá trên tập val. | `best.pt`, `results.csv`, `confusion_matrix.png` → lưu kết quả vào `docs/`. | ⬜ |
+| M3 (Ngày 06) | • Chạy inference bằng `best.pt` trên COG tái tạo, xuất `data/outputs/detections.geojson` class `palm`.<br>• Cập nhật `docs/yolo_qa.md` (precision/recall/mAP50, tổng tán, mật độ tán/ha) + viết mục báo cáo YOLO + ảnh minh họa. | `data/outputs/detections.geojson` (`palm`), `docs/yolo_qa.md` cập nhật, bản thảo báo cáo + ảnh overlay. | ⬜ |
+| Ngày 07 | • Trực nhánh AI khi demo. | Demo pipeline & kết quả `palm` trên WebGIS. | ⬜ |
 
 #### 👤 Quang Anh — NDVI/NDRE & LULC + Notebook demo
 
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| 01 | • Kiểm tra band 3/4/5; thử NDVI/NDRE trên crop 1000×1000; xử lý chia 0 + mask. | Script/notebook thử nghiệm + nhận xét khoảng giá trị NDVI. | ⬜ |
-| 02 | • `scripts/03_spectral_ndvi_analysis.py` phần 1: tính NDVI, NDRE toàn ảnh (Float32, áp mask). | `data/outputs/ndvi.tif`, `data/outputs/ndre.tif` + thống kê min/max/mean. | ⬜ |
-| 03 | • Phân ngưỡng 4 lớp LULC theo **GIAI ĐOẠN 4** (Mục 3), lưu raster Byte (1 = Cây tốt, 2 = Cỏ/thưa, 3 = Đất, 4 = Nước). | `data/outputs/lulc_class.tif`. | ⬜ |
-| 04 | • Tính diện tích từ pixel 0.0413 m; xuất JSON theo schema; xuất ảnh preview NDVI có colormap. | `data/outputs/lulc_summary.json`; `data/outputs/ndvi_preview.png`. | ⬜ |
-| 05 | • QA: tổng diện tích khớp, kiểm tra lớp nước, đối chiếu NDVI với ảnh RGB.<br>• Dựng `notebooks/04_demo_pipeline.ipynb`: đọc COG ở độ phân giải giảm, vẽ RGB/CIR/NDVI/NDRE/LULC, overlay box từ `detections.geojson`. | `docs/spectral_qa.md`; `notebooks/04_demo_pipeline.ipynb` (chạy sẵn, < 30 giây). | ⬜ |
+| 01 | • Kiểm tra band 3/4/5; thử NDVI/NDRE trên crop 1000×1000; xử lý chia 0 + mask + bão hòa (`65535`). | `scripts/03_spectral_ndvi_analysis.py` (`--window`); `docs/spectral_notes.md` (nhận xét khoảng giá trị NDVI/NDRE). | ✅ |
+| 02 | • `scripts/03_spectral_ndvi_analysis.py` phần 1: tính NDVI, NDRE toàn ảnh (Float32, áp mask). | `data/outputs/ndvi.tif`, `data/outputs/ndre.tif`, `data/outputs/spectral_stats.json` + 21 unit test (`tests/test_spectral_ndvi.py`). | ✅ |
+| 03 | • Phân ngưỡng 4 lớp LULC theo **GIAI ĐOẠN 4** (Mục 3), lưu raster Byte (`1 = Cây xanh tốt`, `2 = Thảm cỏ / cây bụi`, `3 = Thực vật thưa / khô`, `4 = Đất trống / đất lộ`). | `data/outputs/lulc_class.tif`. | ✅ |
+| 04 | • Tính diện tích từ pixel 0.0413 m; xuất JSON theo schema; xuất ảnh preview NDVI có colormap. | `data/outputs/lulc_summary.json`; `data/outputs/ndvi_preview.png`. | ✅ |
+| 05 | • QA: tổng diện tích khớp, kiểm tra phổ các lớp (đã đổi tên lớp 3/4 theo kiểm tra phổ trên COG tái tạo), đối chiếu NDVI với ảnh RGB.<br>• Dựng `notebooks/04_demo_pipeline.ipynb`: đọc COG ở độ phân giải giảm, vẽ RGB/CIR/NDVI/NDRE/LULC, overlay box từ `detections.geojson`. | `docs/spectral_qa.md`; `notebooks/04_demo_pipeline.ipynb` (chạy sẵn, < 30 giây). | 🔄 Đã có tests, `spectral_notes.md` & đổi tên lớp 3/4; chưa có `spectral_qa.md` & notebook |
 | 06 | • Viết mục báo cáo NDVI/NDRE/LULC + công thức.<br>• Xuất ảnh từ notebook vào `docs/figures/` để chèn báo cáo. | Bản thảo gửi Minh; `docs/figures/` (RGB, CIR, NDVI, LULC, detection overlay). | ⬜ |
 | 07 | • Trực nhánh phổ khi demo. | — | ⬜ |
 
@@ -547,9 +545,9 @@ Quy ước   : KHÔNG dùng src.count để suy ra band; luôn dùng index tư�
   "total_valid_area_ha": 2.51,
   "classes": [
     { "id": 1, "name": "Cây xanh tốt", "ndvi_range": [0.45, 1.0], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
-    { "id": 2, "name": "Thảm cỏ / cây thưa", "ndvi_range": [0.20, 0.45], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
-    { "id": 3, "name": "Đất trống / nhà cửa", "ndvi_range": [0.00, 0.20], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
-    { "id": 4, "name": "Mặt nước / trũng ẩm", "ndvi_range": [-1.0, 0.00], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 }
+    { "id": 2, "name": "Thảm cỏ / cây bụi", "ndvi_range": [0.20, 0.45], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
+    { "id": 3, "name": "Thực vật thưa / khô", "ndvi_range": [0.00, 0.20], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
+    { "id": 4, "name": "Đất trống / đất lộ", "ndvi_range": [-1.0, 0.00], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 }
   ]
 }
 ```
