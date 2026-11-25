@@ -1,6 +1,6 @@
 # Báo cáo Kiểm thử chất lượng (QA) Nhận diện Đối tượng YOLO (Nhánh Hinh)
 
-> ⚠️ **Kết luận chất lượng (đọc trước):** 12 box lớp `person` trong `detections.geojson` là kết quả **baseline** của YOLOv8m-COCO, **chưa được kiểm chứng thực địa**. Kiểm tra thủ công trên ảnh crop cho thấy **đa số là dương tính giả (false positive)** do domain gap: box nằm trên tán lá, đất trống hoặc rìa nền trắng, kích thước 0,23–26 m không tương thích với người thật. Kết quả này **chỉ dùng để kiểm thử pipeline/WebGIS**, không dùng làm số liệu "số người phát hiện" trong báo cáo. Muốn có kết quả thực địa cần fine-tune model trên dữ liệu UAV.
+> ⚠️ **Kết luận chất lượng (đọc trước):** 12 box lớp `person` trong file baseline `data/outputs/detections_person_baseline.geojson` (đã đổi tên từ `detections.geojson` sau khi Minh duyệt class `palm` ngày 26/11) là kết quả **baseline** của YOLOv8m-COCO, **chưa được kiểm chứng thực địa**. Kiểm tra thủ công trên ảnh crop cho thấy **đa số là dương tính giả (false positive)** do domain gap: box nằm trên tán lá, đất trống hoặc rìa nền trắng, kích thước 0,23–26 m không tương thích với người thật. Kết quả này **chỉ dùng để kiểm thử pipeline/WebGIS và lưu đối chiếu "negative result"**, không dùng làm số liệu "số người phát hiện" trong báo cáo. Nhánh YOLO đã chuyển sang fine-tune `palm` trên `plot_B03`.
 
 ## 1. Thông số thực nghiệm chốt số liệu
 - **Lệnh thực thi:**
@@ -23,11 +23,13 @@ Ba con số dữ liệu đã được đối chiếu và khớp nhau hoàn toàn
 - **Số box sau khử trùng lặp NMS (`IoU = 0.50`):** **12**
 - **Số Feature trong tệp GeoJSON (`detections.geojson`):** **12**
 
-| Phân lớp chuẩn (Schema 4.4.B) | Số lượng phát hiện | Ghi chú |
-| :--- | :---: | :--- |
-| `person` | 12 | Box lớp `person` do model COCO gán; **chưa kiểm chứng thực địa**, phần lớn là false positive (xem Mục 3) |
-| `vehicle` | 0 | Không có box `vehicle` sau lọc/mapping |
-| **Tổng cộng** | **12 box baseline** | **Khớp 100% số Feature trong GeoJSON; không đồng nghĩa 12 người thật** |
+| Phân lớp chuẩn (Schema 4.4.B) | Số lượng baseline | Trạng thái sau duyệt (Minh, 26/11) | Ghi chú |
+| :--- | :---: | :--- | :--- |
+| `palm` | — | 🎯 **Class mục tiêu chính (fine-tune)** | Bổ sung vào Contract 4.4.B; nhánh Hinh sẽ xuất `detections.geojson` class `palm` ở Mốc M3 |
+| `person` | 12 | 📦 Lưu baseline (`detections_person_baseline.geojson`) | Box COCO, **false positive** do domain gap — chỉ dùng đối chiếu pipeline, không dùng làm số liệu báo cáo |
+| `vehicle` | 0 | — | Không có phát hiện baseline |
+| `building`, `machinery`, `other` | 0 | — | Giữ trong whitelist 4.4.B |
+| **Tổng (baseline COCO)** | **12** | **Lưu tại `detections_person_baseline.geojson`** | Khớp 100% schema; không đồng nghĩa 12 người thật |
 
 ## 3. Giới hạn kết quả và kiểm chứng thủ công
 
@@ -40,7 +42,7 @@ Ba con số dữ liệu đã được đối chiếu và khớp nhau hoàn toàn
 ## 4. Phân tích giới hạn Domain Gap (Lý do lọc bỏ nhãn rác)
 - **Bản chất hiện tượng:** Mô hình YOLOv8 được tiền huấn luyện (pre-trained) trên tập dữ liệu COCO (chủ yếu là ảnh chụp phối cảnh ngang tầm mắt con người). Khi áp dụng trực tiếp mô hình này lên ảnh viễn thám UAV với góc nhìn thẳng đứng từ trên cao (nadir view) trên cánh đồng, xuất hiện sai lệch miền dữ liệu rõ rệt (**Domain Gap**).
 - **Hệ quả thực nghiệm:** Kết cấu bề mặt hình thái tròn xoăn của các khóm tán lá/cây bụi nhìn từ trên cao có đặc trưng thị giác tương đồng với các lớp `broccoli`, `potted plant` trong COCO; một số bóng phản xạ hoặc vật thể nhỏ bị gán nhầm thành `bird`, `handbag`, `umbrella`, `skateboard`. Đây hoàn toàn là các **dương tính giả (False Positives)** do lệch miền dữ liệu, không phải đặc trưng thực địa.
-- **Giải pháp xử lý:** Tuân thủ nghiêm ngặt Hợp đồng dữ liệu 4.4.B, áp dụng bộ lọc phân lớp (Class Filtering & Mapping): chỉ giữ lại các nhãn thuộc danh mục chuẩn (`person`, `vehicle`, `building`, `machinery`, `other`), loại bỏ các nhãn nhiễu ngoài domain. Lưu ý: "sạch" ở đây chỉ có nghĩa **đúng danh mục schema**, **không** có nghĩa các box còn lại là nhận diện đúng — như phân tích tại Mục 3, 12 box `person` vẫn là false positive.
+- **Giải pháp xử lý:** Tuân thủ nghiêm ngặt Hợp đồng dữ liệu 4.4.B, áp dụng bộ lọc phân lớp (Class Filtering & Mapping): chỉ giữ lại các nhãn thuộc danh mục chuẩn (`vehicle`, `building`, `machinery`, `palm`, `person`, `other` — `palm` bổ sung từ 26/11 cho nhánh fine-tune tán cọ dầu), loại bỏ các nhãn nhiễu ngoài domain.
 
 ## 5. Giải trình các sai lệch kỹ thuật so với Spec gốc
 1. **Dữ liệu đầu vào (Tạm đọc Ortho EPSG:4326 thay vì COG):**

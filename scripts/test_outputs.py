@@ -9,7 +9,7 @@ import os
 import json
 import rasterio
 
-ALLOWED_CLASSES = {"vehicle", "building", "machinery", "person", "other"}
+ALLOWED_CLASSES = {"vehicle", "building", "machinery", "palm", "person", "other"}
 
 def test_all():
     print("Kiểm tra tệp GeoTIFF RGB (data/outputs/ortho_rgb_3band.tif):")
@@ -24,8 +24,7 @@ def test_all():
     else:
         print("  Trạng thái: Chưa tìm thấy tệp")
 
-    print("\nKiểm tra tệp GeoJSON (data/outputs/detections.geojson) theo Schema 4.4.B:")
-    geojson_path = "data/outputs/detections.geojson"
+    print(f"\nKiểm tra tệp GeoJSON ({geojson_path}) theo Schema 4.4.B:")
     if os.path.exists(geojson_path):
         with open(geojson_path, "r", encoding="utf-8") as f:
             data = json.load(f)

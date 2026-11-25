@@ -120,9 +120,9 @@ Lưu lại: `best.pt`, `results.csv`, `confusion_matrix.png` → đưa vào `doc
 
 ## 12. Việc cần Minh duyệt
 
-- [ ] Thêm class `palm` vào contract 4.4.B.
-- [ ] Chốt tên class: `palm` hay `oil_palm`.
-- [ ] Đổi tên file person cũ thành `detections_person_baseline.geojson`.
+- [x] Thêm class `palm` vào contract 4.4.B — đã cập nhật `README.md`, `scripts/test_outputs.py`, `docs/yolo_qa.md`.
+- [x] Chốt tên class: **`palm`** (không dùng `oil_palm`, nhất quán với `data/yolo_palm/`).
+- [x] Đổi tên file person cũ thành `data/outputs/detections_person_baseline.geojson`.
 
 ## 13. Lưu ý trung thực
 

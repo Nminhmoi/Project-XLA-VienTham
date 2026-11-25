@@ -375,7 +375,7 @@ Checklist:
 | Orthomosaic Metashape | ✅ Xong | `data/orthomosaic/multispectral_ortho.tif` (5 band phổ + alpha) |
 | COG 5 band UTM | ✅ Xong | `data/outputs/cog_multispectral.tif` — EPSG:32630, pixel 0.0413 m, mask nội bộ ~75,0% diện tích hợp lệ (alpha nguồn ~75,6%) |
 | Band order | ✅ Chốt | 1 = Blue, 2 = Green, 3 = Red, 4 = RedEdge, 5 = NIR |
-| YOLO Detection | 🔄 Xong baseline pipeline; đang chuyển sang `palm` | Đã có `scripts/02_yolo_drone_detection.py`, `scripts/extract_rgb.py`, `scripts/test_outputs.py` và `data/outputs/detections.geojson` (12 box `person` baseline là false positive do domain gap — xem `docs/yolo_qa.md`). Đã chốt đổi hướng sang fine-tune tán cọ dầu (`palm`) theo `docs/note_hinh_tan_cay.md` (chưa train/xuất kết quả mới) |
+| YOLO Detection | 🔄 Xong baseline pipeline; đang chuyển sang `palm` | Đã có `scripts/02_yolo_drone_detection.py`, `scripts/extract_rgb.py`, `scripts/test_outputs.py`. Baseline COCO (12 box `person` false positive) lưu tại `data/outputs/detections_person_baseline.geojson` (xem `docs/yolo_qa.md`). Đã duyệt class `palm` vào Contract 4.4.B — Hinh thực thi M1→M3 theo `docs/note_hinh_tan_cay.md` |
 | NDVI/NDRE/LULC | ✅ Xong script & output (còn notebook demo) | `scripts/03_spectral_ndvi_analysis.py`, `lulc_summary.json`, `spectral_stats.json`, `ndvi.tif`, `ndre.tif`, `lulc_class.tif`, `ndvi_preview.png` (`2.51 ha`) |
 | WebGIS Dashboard | ⬜ Chưa | Cần `web/index.html` + Leaflet |
 
@@ -465,7 +465,7 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 | Mốc | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| Tiền đề | • Minh duyệt thêm class `palm` vào contract 4.4.B (`README.md`, `scripts/test_outputs.py`, `docs/yolo_qa.md`).<br>• Đổi tên baseline cũ sang `data/outputs/detections_person_baseline.geojson`. | Contract đồng bộ 3 nơi + giữ file baseline đối chiếu. | ⬜ |
+| Tiền đề | • Minh duyệt thêm class `palm` vào contract 4.4.B (`README.md`, `scripts/test_outputs.py`, `docs/yolo_qa.md`).<br>• Đổi tên baseline cũ sang `data/outputs/detections_person_baseline.geojson`. | Contract đồng bộ 3 nơi + giữ file baseline đối chiếu. | ✅ |
 | M1 | • Cắt tile `640×640` overlap 15% (≥ 95% pixel hợp lệ) từ COG tái tạo; gán nhãn 15–20 tile (~400–700 tán cọ dầu, chia 80/20 theo tile). | Bộ dữ liệu `data/yolo_palm/` (`images/`, `labels/`, `data.yaml`). | ⬜ |
 | M2 | • Fine-tune `yolo11n.pt` / `yolo11s.pt` (`imgsz=640`, 60–80 epochs) trên Colab T4; đánh giá trên tập val. | `best.pt`, `results.csv`, `confusion_matrix.png` → lưu kết quả vào `docs/`. | ⬜ |
 | M3 (Ngày 06) | • Chạy inference bằng `best.pt` trên COG tái tạo, xuất `data/outputs/detections.geojson` class `palm`.<br>• Cập nhật `docs/yolo_qa.md` (precision/recall/mAP50, tổng tán, mật độ tán/ha) + viết mục báo cáo YOLO + ảnh minh họa. | `data/outputs/detections.geojson` (`palm`), `docs/yolo_qa.md` cập nhật, bản thảo báo cáo + ảnh overlay. | ⬜ |
@@ -533,7 +533,9 @@ Quy ước   : KHÔNG dùng src.count để suy ra band; luôn dùng index tư�
 ```
 
 * Geometry theo **EPSG:4326 (lon, lat)**, polygon = 4 góc bounding box (Leaflet tự chiếu sang Web Mercator).
-* `class_name` dùng danh mục cố định, không đổi tên tùy tiện: `vehicle`, `building`, `machinery`, `person`, `other`.
+* `class_name` dùng danh mục cố định, không đổi tên tùy tiện: `vehicle`, `building`, `machinery`, `palm`, `person`, `other`.
+  * Trên `plot_B03`, nhánh AI fine-tune dùng 1 class mục tiêu là `palm` (tán cọ dầu) → xuất vào `data/outputs/detections.geojson`.
+  * File baseline COCO cũ lưu đối chiếu tại `data/outputs/detections_person_baseline.geojson` (không dùng làm số liệu chính thức).
 
 **C. `data/outputs/lulc_summary.json`** (Quang Anh → Đức)
 
