@@ -6,58 +6,63 @@
   "total_valid_area_m2": 25068.08,
   "total_valid_pixel_count": 14696741,
   "excluded_pixel_count": {
-    "outside_mask": 4895991,
+    "outside_mask": 4895985,
     "saturated": 1114,
-    "zero_denominator": 0
+    "zero_denominator": 6
   },
+  "ndvi_thresholds": [
+    0.4,
+    0.1,
+    -0.15
+  ],
   "classes": [
     {
       "id": 1,
       "name": "Cây xanh tốt",
       "ndvi_range": [
-        0.45,
+        0.4,
         1.0
       ],
-      "pixel_count": 4333469,
-      "area_m2": 7391.55,
-      "area_ha": 0.7392,
-      "percent": 29.49
+      "pixel_count": 5732176,
+      "area_m2": 9777.32,
+      "area_ha": 0.9777,
+      "percent": 39.0
     },
     {
       "id": 2,
       "name": "Thảm cỏ / cây bụi",
       "ndvi_range": [
-        0.2,
-        0.45
+        0.1,
+        0.4
       ],
-      "pixel_count": 4945881,
-      "area_m2": 8436.14,
-      "area_ha": 0.8436,
-      "percent": 33.65
+      "pixel_count": 4416859,
+      "area_m2": 7533.79,
+      "area_ha": 0.7534,
+      "percent": 30.05
     },
     {
       "id": 3,
       "name": "Thực vật thưa / khô",
       "ndvi_range": [
-        0.0,
-        0.2
+        -0.15,
+        0.1
       ],
-      "pixel_count": 1550740,
-      "area_m2": 2645.08,
-      "area_ha": 0.2645,
-      "percent": 10.55
+      "pixel_count": 1692116,
+      "area_m2": 2886.23,
+      "area_ha": 0.2886,
+      "percent": 11.51
     },
     {
       "id": 4,
       "name": "Đất trống / đất lộ",
       "ndvi_range": [
         -1.0,
-        0.0
+        -0.15
       ],
-      "pixel_count": 3866651,
-      "area_m2": 6595.31,
-      "area_ha": 0.6595,
-      "percent": 26.31
+      "pixel_count": 2855590,
+      "area_m2": 4870.75,
+      "area_ha": 0.4871,
+      "percent": 19.43
     }
   ]
 }
