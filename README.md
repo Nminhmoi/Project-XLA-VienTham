@@ -467,7 +467,7 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 | 02 | • Cắt tile 640×640 overlap 15% (ưu tiên COG 4.4.A, stretch chung, mask nội bộ) → Lập bộ dữ liệu **318 nhãn `palm`** kiểm tra trực quan (`31 train / 6 val`). | `data/yolo_palm/`, `scripts/extract_rgb.py`, `scripts/prepare_palm_dataset.py`, `scripts/test_dataset.py`. | ✅ |
 | 03 | • Fine-tune `yolo11n.pt` (`batch=4`, `epochs=150`), đạt **`mAP50 = 0.7319`** (`P=0.7147`, `R=0.7037`). | `docs/best.pt`, `docs/results.csv`, `docs/confusion_matrix.png`. | ✅ |
 | 04 | • Chạy inference toàn ảnh `02_yolo_drone_detection.py` (`conf=0.25`, `iou=0.50`, lọc mép tile & NoData), chuyển pixel → GPS, xuất GeoJSON 4.4.B. | `data/outputs/detections.geojson` (**289 Features** `palm`), `data/outputs/detections_raw.json` (399 thô). | ✅ |
-| 05 | • QA: thống kê **289 cây**, diện tích **2.5059 ha**, mật độ **115.33 cây/ha**, đường kính tán TB **4.49 m**; kiểm thử Schema 4.4.B pass 100%. | `docs/yolo_qa.md`, `data/outputs/palm_stats.json`, `data/outputs/detections_visualized.jpg`. | ✅ |
+| 05 | • QA: thống kê **289 cây**, diện tích **2.5059 ha**, mật độ **115.33 cây/ha**, đường kính tán TB **4.49 m**; kiểm thử Schema 4.4.B pass 100%. | `docs/yolo_qa.md`, `data/outputs/palm_stats.json`, `docs/figures/detections_palm.jpg`. | ✅ |
 | 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform, fine-tuning cọ dầu). | Bản thảo mục YOLO gửi Minh (Markdown/Docx) + ảnh minh họa. | 🔄 |
 | 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
 
