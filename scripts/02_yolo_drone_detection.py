@@ -237,6 +237,54 @@ def save_visualization(
     pil_img.save(output_visualized, quality=90)
 
 
+def suppress_tile_edge_fragments(
+    nms_boxes: list[dict],
+    edge_iom_thresh: float = 0.60,
+    nested_iom_thresh: float = 0.80,
+) -> list[dict]:
+    """Loại bỏ các box bị cắt nửa ở mép tile hoặc lồng trùng bên trong tán cọ lớn hơn sau NMS."""
+    if not nms_boxes:
+        return []
+
+    def _area(b: list[float]) -> float:
+        return max(0.0, b[2] - b[0]) * max(0.0, b[3] - b[1])
+
+    def _inter(a: list[float], b: list[float]) -> float:
+        ix1, iy1 = max(a[0], b[0]), max(a[1], b[1])
+        ix2, iy2 = min(a[2], b[2]), min(a[3], b[3])
+        return max(0.0, ix2 - ix1) * max(0.0, iy2 - iy1)
+
+    kept: list[dict] = []
+    # Ưu tiên giữ các box không bị cắt mép và có diện tích/confidence tốt
+    ordered = sorted(
+        nms_boxes,
+        key=lambda d: (not d.get("_edge_clipped", False), _area(d["box"]), d["conf"]),
+        reverse=True,
+    )
+    for cand in ordered:
+        c_box = cand["box"]
+        c_area = _area(c_box)
+        if c_area <= 0:
+            continue
+        is_dup = False
+        for ref in kept:
+            r_box = ref["box"]
+            r_area = _area(r_box)
+            iom = _inter(c_box, r_box) / min(c_area, r_area)
+            if cand.get("_edge_clipped", False) and iom >= edge_iom_thresh:
+                is_dup = True
+                break
+            if iom >= nested_iom_thresh:
+                is_dup = True
+                break
+        if not is_dup:
+            kept.append(cand)
+
+    # Sắp xếp lại theo độ tin cậy giảm dần cho nhất quán với output NMS chuẩn
+    kept.sort(key=lambda d: d["conf"], reverse=True)
+    return kept
+
+
 def sliding_window_yolo_detection(
     rgb_tif_path: str,
     output_geojson: str,
@@ -292,7 +340,9 @@ def sliding_window_yolo_detection(
             else:
                 patch_to_infer = patch
 
-            results = model.predict(patch_to_infer, conf=conf_thresh, device=device, verbose=False)
+            # Ultralytics đọc mảng numpy đầu vào theo thứ tự kênh BGR (giống cv2.imread khi train/val)
+            patch_bgr = patch_to_infer[:, :, ::-1]
+            results = model.predict(patch_bgr, conf=conf_thresh, device=device, verbose=False)
             for res in results:
                 for box in res.boxes:
                     bx1, by1, bx2, by2 = box.xyxy[0].cpu().numpy()
@@ -321,29 +371,41 @@ def sliding_window_yolo_detection(
                         filtered_nodata_boxes += 1
                         continue
 
+                    is_edge_clipped = (
+                        (bx1 <= 3.0 and x > 0)
+                        or (by1 <= 3.0 and y > 0)
+                        or (bx2 >= pw - 3.0 and x_end < width)
+                        or (by2 >= ph - 3.0 and y_end < height)
+                    )
+
                     raw_detections.append({
                         "box": [gx1, gy1, gx2, gy2],
                         "conf": conf,
                         "class_name": "palm",
                         "orig_name": orig_name,
                         "tile_id": tile_id,
+                        "_edge_clipped": bool(is_edge_clipped),
                     })
 
     t_infer_total = time.perf_counter() - t_start
     ms_per_tile = (t_infer_total / max(valid_tiles_count, 1)) * 1000.0
 
+    raw_export = [
+        {k: v for k, v in d.items() if not k.startswith("_")}
+        for d in raw_detections
+    ]
     raw_dir = os.path.dirname(output_raw_json)
     if raw_dir:
         os.makedirs(raw_dir, exist_ok=True)
     with open(output_raw_json, "w", encoding="utf-8") as f:
-        json.dump(raw_detections, f, ensure_ascii=False, indent=2)
+        json.dump(raw_export, f, ensure_ascii=False, indent=2)
 
     final_boxes = []
     if raw_detections:
         boxes_t = torch.tensor([d["box"] for d in raw_detections], dtype=torch.float32)
         scores_t = torch.tensor([d["conf"] for d in raw_detections], dtype=torch.float32)
-        for k in torchvision.ops.nms(boxes_t, scores_t, nms_iou_thresh):
-            final_boxes.append(raw_detections[k.item()])
+        nms_selected = [raw_detections[k.item()] for k in torchvision.ops.nms(boxes_t, scores_t, nms_iou_thresh)]
+        final_boxes = suppress_tile_edge_fragments(nms_selected)
 
     stats = compute_forestry_stats(final_boxes, valid_mask, px_w_m, px_h_m)
     feature_count = export_geojson(final_boxes, transform, src_crs, output_geojson)
