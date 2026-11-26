@@ -459,17 +459,17 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 #### 👤 Hinh — YOLO Detection
 
-> 🔄 **Đã chốt đổi hướng (24/11):** dừng YOLO-COCO `person`/`vehicle` (12 box là false positive do domain gap), chuyển sang **fine-tune nhận diện tán cọ dầu (class `palm`)** trên plot_B03. Chi tiết và checklist: **`docs/note_hinh_tan_cay.md`**. Bảng dưới đây là lịch sử nhánh cũ, giữ để đối chiếu.
+> 🔄 **Đã chuyển hướng (24/11):** Hủy bỏ kết quả YOLO-COCO cũ (false positive do domain gap), chuyển sang **fine-tune nhận diện tán cọ dầu (class `palm`)** trên plot_B03. Chi tiết và kế hoạch 5 giai đoạn: **`docs/cac_buoc_xu_ly_tan_cay.md`** & **`Docs/note_hinh_tan_cay.md`**.
 
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| 01 | • Cài `ultralytics`, tải weights mô hình YOLO.<br>• Test inference ảnh mẫu trên CPU. | `docs/yolo_setup.md`; môi trường chạy tốt trên CPU. | ✅ |
-| 02 | • `scripts/02_yolo_drone_detection.py` phần 1: trích RGB (band 3,2,1, contrast stretch 8-bit) → cắt tile 640×640 overlap 15% → xử lý loại bỏ tile nền đen. | `scripts/extract_rgb.py`; `data/outputs/ortho_rgb_3band.tif`. | ✅ |
-| 03 | • Chạy YOLO toàn ảnh trên CPU, lọc `conf ≥ 0.25`, gộp box trùng bằng NMS (IoU 0.50). | 16 box thô -> 12 box sau NMS (**baseline, chưa kiểm chứng thực địa**; xem `docs/yolo_qa.md`). | ✅ |
-| 04 | • Chuyển pixel → GPS bằng `GeoTransform` (ra EPSG:4326), xuất GeoJSON theo schema 4.4.B. | `data/outputs/detections.geojson` (đúng schema, mở được trong QGIS/Leaflet; box là baseline chưa kiểm chứng). | ✅ |
-| 05 | • QA: kiểm tra box nền/trùng lặp, thống kê box theo lớp (`conf=0.25`), đánh giá domain gap. | `docs/yolo_qa.md` (kết luận 12 box `person` là false positive do domain gap). | ✅ |
-| 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform). | Bản thảo mục YOLO gửi Minh (Markdown) + ảnh minh họa. | 🔄 |
-| 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
+| 01 | • Cài `ultralytics`, tải base weights YOLO (`yolo11n.pt`).<br>• Dọn dẹp kết quả cũ, đồng bộ Schema 4.4.B (thêm class `palm`). | `docs/yolo_setup.md`, `scripts/test_outputs.py`. | ✅ |
+| 02 | • Cắt tile 640×640 overlap 15% (loại bỏ NoData) → Lập bộ dữ liệu gán nhãn 15–20 tile (~400–700 tán cọ). | `data/yolo_palm/` (images, labels train/val, `data.yaml`). | 🔄 |
+| 03 | • Fine-tune YOLO trên Colab T4 (60–80 epoch, $mAP_{50} \ge 0.5$). | `best.pt`, `results.csv`, `confusion_matrix.png`. | ⬜ |
+| 04 | • Chạy inference toàn ảnh `02_yolo_drone_detection.py`, chuyển pixel → GPS, xuất GeoJSON 4.4.B. | `data/outputs/detections.geojson` (class `palm`). | ⬜ |
+| 05 | • QA: thống kê tổng số cây, mật độ tán/ha, phân bố kích thước tán; xuất ảnh trực quan. | `docs/yolo_qa.md`, `detections_visualized.jpg`. | ⬜ |
+| 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform, fine-tuning cọ dầu). | Bản thảo mục YOLO gửi Minh (Markdown/Docx) + ảnh minh họa. | ⬜ |
+| 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | ⬜ |
 
 #### 👤 Quang Anh — NDVI/NDRE & LULC + Notebook demo
 
@@ -533,7 +533,7 @@ Quy ước   : KHÔNG dùng src.count để suy ra band; luôn dùng index tư�
 ```
 
 * Geometry theo **EPSG:4326 (lon, lat)**, polygon = 4 góc bounding box (Leaflet tự chiếu sang Web Mercator).
-* `class_name` dùng danh mục cố định, không đổi tên tùy tiện: `vehicle`, `building`, `machinery`, `person`, `other`.
+* `class_name` dùng danh mục cố định, không đổi tên tùy tiện: `vehicle`, `building`, `machinery`, `person`, `palm`, `other`.
 
 **C. `data/outputs/lulc_summary.json`** (Quang Anh → Đức)
 
