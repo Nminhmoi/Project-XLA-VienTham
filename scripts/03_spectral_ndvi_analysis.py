@@ -53,8 +53,10 @@ LULC_NAMES = {
     4: "Đất trống / đất lộ",
 }
 LULC_NODATA = 0
-LULC_COLORS = {0: (0, 0, 0, 0), 1: (26, 122, 55, 255), 2: (143, 209, 106, 255),
-               3: (230, 210, 122, 255), 4: (160, 82, 45, 255)}
+# Bảng màu nâu–xanh (kiểu BrBG): đã mô phỏng mù màu đỏ/lục/lam, mọi cặp lớp ΔE(OKLab) >= 9,7;
+# bộ xanh lá / nâu cũ bị trùng lớp 1 và 4 với người mù màu đỏ–lục (ΔE 3,5).
+LULC_COLORS = {0: (0, 0, 0, 0), 1: (1, 102, 94, 255), 2: (90, 180, 172, 255),
+               3: (233, 216, 166, 255), 4: (140, 81, 10, 255)}
 
 
 def validate_thresholds(thresholds) -> tuple[float, float, float]:

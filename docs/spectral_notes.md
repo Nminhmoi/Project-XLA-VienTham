@@ -18,7 +18,7 @@ Output trong `data/outputs/`:
 | File | Kiểu | Ghi chú |
 | :--- | :--- | :--- |
 | `ndvi.tif`, `ndre.tif` | Float32, nodata = NaN | Cùng lưới với COG (EPSG:32630, 0.0413 m) |
-| `lulc_class.tif` | Byte, nodata = 0 | 1 Cây xanh tốt · 2 Cỏ/cây bụi · 3 Thực vật thưa/khô · 4 Đất trống; có bảng màu |
+| `lulc_class.tif` | Byte, nodata = 0 | 1 Cây xanh tốt · 2 Cỏ/cây bụi · 3 Thực vật thưa/khô · 4 Đất trống; bảng màu nâu–xanh an toàn cho người mù màu |
 | `lulc_summary.json` | JSON | Diện tích, % và `ndvi_range` của 4 lớp; tổng diện tích hợp lệ; số pixel bị loại; `ndvi_thresholds` đã dùng |
 | `spectral_stats.json` | JSON | min/max/mean/std/percentile của NDVI, NDRE |
 | `ndvi_preview.png` | PNG RGBA | RdYlGn, rescale −0.2…0.8 (giống TiTiler), nền trong suốt |
@@ -26,8 +26,8 @@ Output trong `data/outputs/`:
 ## Kiểm tra band 3/4/5 và xử lý pixel lỗi
 
 - Band đọc theo index tường minh: 3 = Red, 4 = RedEdge, 5 = NIR (khớp `descriptions` trong COG).
-- Chia 0: mẫu số = 0 → NaN (toàn ảnh có 6 px).
-- Mask: pixel ngoài mask nội bộ → NaN / lớp 0 (4 895 985 px).
+- Chia 0: mẫu số = 0 → NaN (COG tái tạo bằng script 01: 0 px; COG cũ có 6 px, nay đã nằm ngoài mask).
+- Mask: pixel ngoài mask nội bộ → NaN / lớp 0 (4 895 991 px).
 - Bão hòa: Red = 65535 ở 1 114 px (0,008 %) → loại, vì Red bão hòa làm NDVI âm giả.
 - Tính toán trên float32 sau khi ép kiểu (tránh tràn số khi trừ uint16); sai khác so với float64 < 3·10⁻⁸.
 

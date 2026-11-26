@@ -1,0 +1,254 @@
+{
+  "all_pass": true,
+  "checks": [
+    {
+      "name": "Diện tích 1 pixel = |ΔX·ΔY|",
+      "pass": true,
+      "detail": "0.00170569 m² (JSON 0.00170569)"
+    },
+    {
+      "name": "Pixel phân lớp = mask − bão hòa − mẫu số 0",
+      "pass": true,
+      "detail": "14,697,855 − 1,114 − 0 = 14,696,741; JSON 14,696,741; raster 14,696,741"
+    },
+    {
+      "name": "Số pixel từng lớp: JSON = raster",
+      "pass": true,
+      "detail": "lớp 1: 5,732,176, lớp 2: 4,416,859, lớp 3: 1,692,116, lớp 4: 2,855,590"
+    },
+    {
+      "name": "Tổng diện tích các lớp = tổng hợp lệ",
+      "pass": true,
+      "detail": "25,068.09 m² vs 25,068.08 m²"
+    },
+    {
+      "name": "Tổng hợp lệ = số pixel × diện tích pixel",
+      "pass": true,
+      "detail": "14,696,741 × 0.00170569 = 25,068.08 m² = 2.5068 ha"
+    },
+    {
+      "name": "Tổng phần trăm ≈ 100",
+      "pass": true,
+      "detail": "99.99% (sai số làm tròn từng lớp)"
+    },
+    {
+      "name": "NaN ở NDVI ⇔ lớp 0 ở LULC",
+      "pass": true,
+      "detail": "4,897,105 pixel NaN"
+    },
+    {
+      "name": "Phân lớp lại từ ndvi.tif khớp lulc_class.tif",
+      "pass": true,
+      "detail": "0 pixel lệch, ngưỡng [0.4, 0.1, -0.15]"
+    },
+    {
+      "name": "NDVI nằm trong [−1, 1]",
+      "pass": true,
+      "detail": "min -0.663, max 1.000"
+    },
+    {
+      "name": "Otsu tính lại, làm tròn 0,05 = ngưỡng đang dùng",
+      "pass": true,
+      "detail": "Otsu [0.397, 0.109, -0.174] → [0.4, 0.1, -0.15]"
+    },
+    {
+      "name": "NDVI trung bình giảm dần lớp 1 → 4",
+      "pass": true,
+      "detail": "[0.511, 0.2837, -0.0252, -0.3038]"
+    },
+    {
+      "name": "Tỉ số NIR/Red giảm dần lớp 1 → 4",
+      "pass": true,
+      "detail": "[3.06, 1.8, 0.95, 0.53]"
+    },
+    {
+      "name": "Lớp 1: NIR cao nhất, Red thấp nhất (đặc trưng thực vật)",
+      "pass": true,
+      "detail": "NIR 35111, Red 11466"
+    },
+    {
+      "name": "Lớp 4: Red > NIR (đặc trưng đất trống trên DN chưa hiệu chuẩn)",
+      "pass": true,
+      "detail": "Red 31060 > NIR 16336"
+    },
+    {
+      "name": "NDRE trung bình lớp 1 > lớp 4",
+      "pass": true,
+      "detail": "[0.0803, 0.0358, -0.0005, -0.0423]"
+    },
+    {
+      "name": "Tương quan NDVI ↔ chỉ số xanh từ RGB (ExG) dương",
+      "pass": true,
+      "detail": "Pearson r = 0.638 (500 000 pixel mẫu)"
+    },
+    {
+      "name": "Trong box tán cọ, lớp 1+2 chiếm đa số",
+      "pass": true,
+      "detail": "84.4% (lớp 1: 51.7% trong box so với 39.0% toàn ảnh; 289 box)"
+    },
+    {
+      "name": "Trong box tán cọ, lớp 4 (đất) ít hơn toàn ảnh",
+      "pass": true,
+      "detail": "7.6% so với 19.4%"
+    }
+  ],
+  "ndvi_thresholds": [
+    0.4,
+    0.1,
+    -0.15
+  ],
+  "class_profile_mean": {
+    "1": {
+      "Blue": 20422.2,
+      "Green": 20993.8,
+      "Red": 11466.3,
+      "RedEdge": 30345.5,
+      "NIR": 35110.9,
+      "NDVI": 0.511,
+      "NDRE": 0.0803
+    },
+    "2": {
+      "Blue": 24574.8,
+      "Green": 25970.3,
+      "Red": 17477.5,
+      "RedEdge": 29745.0,
+      "NIR": 31462.8,
+      "NDVI": 0.2837,
+      "NDRE": 0.0358
+    },
+    "3": {
+      "Blue": 25494.1,
+      "Green": 24597.1,
+      "Red": 22223.3,
+      "RedEdge": 21556.5,
+      "NIR": 21163.3,
+      "NDVI": -0.0252,
+      "NDRE": -0.0005
+    },
+    "4": {
+      "Blue": 30944.4,
+      "Green": 25650.9,
+      "Red": 31060.2,
+      "RedEdge": 17921.3,
+      "NIR": 16336.3,
+      "NDVI": -0.3038,
+      "NDRE": -0.0423
+    }
+  },
+  "ndvi_exg_pearson_r": 0.6379,
+  "palm_check": {
+    "n_boxes": 289,
+    "pixels_in_boxes": 3700348,
+    "percent_in_boxes": {
+      "1": 51.75,
+      "2": 32.66,
+      "3": 7.96,
+      "4": 7.63
+    },
+    "percent_whole_plot": {
+      "1": 39.0,
+      "2": 30.05,
+      "3": 11.51,
+      "4": 19.43
+    }
+  },
+  "dark_5pct_class_share": {
+    "1": 45.32,
+    "2": 29.56,
+    "3": 16.45,
+    "4": 8.67
+  },
+  "threshold_sensitivity": [
+    {
+      "threshold": "t1",
+      "shift": -0.05,
+      "new": [
+        0.35,
+        0.1,
+        -0.15
+      ],
+      "delta_percent_points": {
+        "1": 8.28,
+        "2": -8.28,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "threshold": "t1",
+      "shift": 0.05,
+      "new": [
+        0.45,
+        0.1,
+        -0.15
+      ],
+      "delta_percent_points": {
+        "1": -9.52,
+        "2": 9.52,
+        "3": 0.0,
+        "4": 0.0
+      }
+    },
+    {
+      "threshold": "t2",
+      "shift": -0.05,
+      "new": [
+        0.4,
+        0.05,
+        -0.15
+      ],
+      "delta_percent_points": {
+        "1": 0.0,
+        "2": 2.4,
+        "3": -2.4,
+        "4": 0.0
+      }
+    },
+    {
+      "threshold": "t2",
+      "shift": 0.05,
+      "new": [
+        0.4,
+        0.15,
+        -0.15
+      ],
+      "delta_percent_points": {
+        "1": 0.0,
+        "2": -2.7,
+        "3": 2.7,
+        "4": 0.0
+      }
+    },
+    {
+      "threshold": "t3",
+      "shift": -0.05,
+      "new": [
+        0.4,
+        0.1,
+        -0.2
+      ],
+      "delta_percent_points": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": 2.69,
+        "4": -2.69
+      }
+    },
+    {
+      "threshold": "t3",
+      "shift": 0.05,
+      "new": [
+        0.4,
+        0.1,
+        -0.1
+      ],
+      "delta_percent_points": {
+        "1": 0.0,
+        "2": 0.0,
+        "3": -2.41,
+        "4": 2.41
+      }
+    }
+  ],
+  "threshold_sensitivity_max_abs_pp": 9.52
+}
