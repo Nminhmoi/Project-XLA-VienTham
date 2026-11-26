@@ -319,10 +319,12 @@ Checklist:
      $$\text{NDRE} = \frac{\text{NIR (Band 5)} - \text{RedEdge (Band 4)}}{\text{NIR (Band 5)} + \text{RedEdge (Band 4)}}$$
 
 2. **Phân loại lớp phủ mặt đất (LULC Thresholding):**
-   * $\text{NDVI} > 0.45$: **Cây xanh tốt / Rừng / Tán cây dày**
-   * $0.20 \le \text{NDVI} \le 0.45$: **Thảm cỏ / Cây bụi**
-   * $0.00 \le \text{NDVI} < 0.20$: **Thực vật thưa / khô**
-   * $\text{NDVI} < 0.00$: **Đất trống / Đất lộ** *(cập nhật từ nhãn mặc định "Mặt nước / Vùng trũng ẩm" sau khi kiểm tra phổ thực tế trên plot_B03)*
+   * **Ngưỡng xác định tự động bằng phương pháp Otsu** trên phân bố NDVI của toàn ảnh (đã áp mask), sau đó **làm tròn tới bội số 0.05** để dễ đọc: $T_1 = 0.40$, $T_2 = 0.10$, $T_3 = -0.15$. Tính lại bằng `scripts/03_spectral_ndvi_analysis.py --suggest-thresholds`; ghi đè bằng `--thresholds`.
+   * $\text{NDVI} > 0.40$: **Cây xanh tốt / Rừng / Tán cây dày**
+   * $0.10 < \text{NDVI} \le 0.40$: **Thảm cỏ / Cây bụi**
+   * $-0.15 \le \text{NDVI} \le 0.10$: **Thực vật thưa / khô**
+   * $\text{NDVI} < -0.15$: **Đất trống / Đất lộ** *(cập nhật từ nhãn mặc định "Mặt nước / Vùng trũng ẩm" sau khi kiểm tra phổ thực tế trên plot_B03: Red cao nhất, NIR thấp, tỉ lệ Red/NIR ≈ 1,54 → đất laterite lộ, không phải nước)*
+   * Ngưỡng thực tế đã dùng **bắt buộc ghi kèm** trong `data/outputs/lulc_summary.json` (khóa `ndvi_thresholds`) để tái lập kết quả.
 
 3. **Tính diện tích thực tế ($m^2$ và Héc-ta):**
    * Đọc độ phân giải mặt đất (Pixel size: $\Delta X, \Delta Y$ tính bằng mét từ hệ UTM):
@@ -357,7 +359,7 @@ Checklist:
      * *Bản đồ chỉ số thực vật NDVI*
      * *Lớp Bounding Boxes YOLO (`detections.geojson`)*
    * **Popup thông tin:** Click vào vật thể để xem tên đối tượng, độ tin cậy, tọa độ GPS.
-   * **Dashboard Widget:** Thống kê tổng số lượng đối tượng và tỷ lệ diện tích các lớp phủ (Cây xanh, Đất trống, Mặt nước).
+   * **Dashboard Widget:** Thống kê tổng số lượng đối tượng và tỷ lệ diện tích các lớp phủ (Cây xanh tốt, Thảm cỏ/cây bụi, Thực vật thưa/khô, Đất trống/đất lộ).
 
 ---
 
@@ -544,15 +546,23 @@ Quy ước   : KHÔNG dùng src.count để suy ra band; luôn dùng index tư�
   "crs": "EPSG:32630",
   "pixel_size_m": 0.0413,
   "pixel_area_m2": 0.00170569,
-  "total_valid_area_ha": 2.51,
+  "total_valid_area_ha": 0,
+  "total_valid_area_m2": 0,
+  "total_valid_pixel_count": 0,
+  "excluded_pixel_count": { "outside_mask": 0, "saturated": 0, "zero_denominator": 0 },
+  "ndvi_thresholds": [0.40, 0.10, -0.15],
   "classes": [
-    { "id": 1, "name": "Cây xanh tốt", "ndvi_range": [0.45, 1.0], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
-    { "id": 2, "name": "Thảm cỏ / cây bụi", "ndvi_range": [0.20, 0.45], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
-    { "id": 3, "name": "Thực vật thưa / khô", "ndvi_range": [0.00, 0.20], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
-    { "id": 4, "name": "Đất trống / đất lộ", "ndvi_range": [-1.0, 0.00], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 }
+    { "id": 1, "name": "Cây xanh tốt", "ndvi_range": [0.40, 1.0], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
+    { "id": 2, "name": "Thảm cỏ / cây bụi", "ndvi_range": [0.10, 0.40], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
+    { "id": 3, "name": "Thực vật thưa / khô", "ndvi_range": [-0.15, 0.10], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 },
+    { "id": 4, "name": "Đất trống / đất lộ", "ndvi_range": [-1.0, -0.15], "pixel_count": 0, "area_m2": 0, "area_ha": 0, "percent": 0 }
   ]
 }
 ```
+
+* `ndvi_thresholds` = `[T1, T2, T3]` — ngưỡng Otsu đã dùng (xem Giai đoạn 4, mục 2). Bắt buộc có để tái lập.
+* Kiểm tra chéo: `total_valid_pixel_count` = tổng `pixel_count` 4 lớp; tổng `percent` ≈ 100; `total_valid_pixel_count` + tổng `excluded_pixel_count` = tổng pixel của COG.
+* `ndvi_range` lấy từ ngưỡng thực tế, **không** hard-code giá trị cũ.
 
 **D. Notebook demo — `notebooks/04_demo_pipeline.ipynb`** (Quang Anh → cả nhóm)
 
