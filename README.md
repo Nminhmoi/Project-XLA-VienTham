@@ -442,8 +442,8 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
 | 01 | • Chạy `gdalinfo -stats` xác minh `multispectral_ortho.tif` và `cog_multispectral.tif` (5 band, EPSG:32630, pixel 0.0413 m, mask).<br>• Tạo skeleton repo: `scripts/`, `web/css/`, `web/js/`, `docs/`, `data/outputs/`.<br>• Viết `requirements.txt`.<br>• Phát dữ liệu + link repo cho nhóm. | `docs/band_order.md` (bảng band, CRS, pixel size, mask); `requirements.txt`; cấu trúc thư mục chuẩn. | ✅ |
-| 02 | • Viết **hợp đồng dữ liệu** (schema `detections.geojson`, `lulc_summary.json`).<br>• Review script của Nam Anh, Hinh, Quang Anh. | `docs/data_contract.md`. | ⬜ |
-| 03 | • Nghiệm thu **Checkpoint 1**: 3 script chạy được trên COG, có output thô. | `docs/checkpoint_01.md` (kết quả + lỗi còn lại). | ⬜ |
+| 02 | • Viết **hợp đồng dữ liệu** (schema `detections.geojson`, `lulc_summary.json`).<br>• Review script của Nam Anh, Hinh, Quang Anh. | `docs/data_contract.md`. | ✅ |
+| 03 | • Nghiệm thu **Checkpoint 1**: 3 script chạy được trên COG, có output thô. | `docs/checkpoint_01.md` (kết quả + lỗi còn lại). | ✅ |
 | 04 | • Kiểm tra output đúng schema.<br>• Nghiệm thu **Checkpoint 2**. | `docs/checkpoint_02.md`. | ⬜ |
 | 05 | • Điều phối test end-to-end, ghi log lỗi và phân công sửa. | `docs/test_report.md`. | ⬜ |
 | 06 | • Ghép báo cáo từ phần chuyên môn của 4 thành viên.<br>• Rà soát số liệu, hình ảnh, chú thích bảng biểu. | `docs/BaoCao_DoAn.docx` (bản nháp ≥ 80%). | ⬜ |
