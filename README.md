@@ -459,7 +459,7 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 #### 👤 Hinh — YOLO Detection
 
-> 🔄 **Đã chuyển hướng & hoàn tất pipeline mới (26/11):** Hủy bỏ kết quả YOLO-COCO cũ (false positive do domain gap), hoàn tất **fine-tune `yolo11n.pt` nhận diện tán cọ dầu (class `palm`)** trên plot_B03 (`mAP50 = 0.7319`, xuất 289 tán chuẩn Schema 4.4.B). Chi tiết: **`docs/yolo_qa.md`**, **`docs/cac_buoc_xu_ly_tan_cay.md`** & **`Docs/note_hinh_tan_cay.md`**.
+> 🔄 **Đã chuyển hướng & hoàn tất pipeline mới (26/11):** Hủy bỏ kết quả YOLO-COCO cũ (false positive do domain gap), hoàn tất **fine-tune `yolo11n.pt` nhận diện tán cọ dầu (class `palm`)** trên plot_B03 (`mAP50 = 0.7319`, xuất 289 tán chuẩn Schema 4.4.B). Chi tiết: **`docs/yolo_qa.md`**, **`docs/cac_buoc_xu_ly_tan_cay.md`** & **`docs/note_hinh_tan_cay.md`**.
 
 | Ngày | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |

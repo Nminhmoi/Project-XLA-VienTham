@@ -4,6 +4,10 @@ __pycache__/
 *$py.class
 *.so
 *.pt
+!docs/best.pt
+# Dataset YOLO palm: chỉ commit nhãn, ảnh tái tạo được
+!data/yolo_palm/
+data/yolo_palm/images/
 *.pth
 runs/
 
