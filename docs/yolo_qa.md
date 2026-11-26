@@ -1,93 +1,86 @@
-# Báo cáo Kiểm thử chất lượng (QA) Nhận diện Đối tượng YOLO (Nhánh Hinh)
+# Báo Cáo Kiểm Thử Chất Lượng (QA) — Nhận Diện Tán Cọ Dầu YOLO (Nhánh Hinh)
 
-> ⚠️ **Kết luận chất lượng (đọc trước):** 12 box lớp `person` trong file baseline `data/outputs/detections_person_baseline.geojson` (đã đổi tên từ `detections.geojson` sau khi Minh duyệt class `palm` ngày 26/11) là kết quả **baseline** của YOLOv8m-COCO, **chưa được kiểm chứng thực địa**. Kiểm tra thủ công trên ảnh crop cho thấy **đa số là dương tính giả (false positive)** do domain gap: box nằm trên tán lá, đất trống hoặc rìa nền trắng, kích thước 0,23–26 m không tương thích với người thật. Kết quả này **chỉ dùng để kiểm thử pipeline/WebGIS và lưu đối chiếu "negative result"**, không dùng làm số liệu "số người phát hiện" trong báo cáo. Nhánh YOLO đã chuyển sang fine-tune `palm` trên `plot_B03`.
+> **Cập nhật ngày 26/11/2026:**
+> - **Đã chuyển hướng & hoàn tất nghiệm thu:** Hủy bỏ hoàn toàn kết quả YOLO-COCO cũ (12 box `person` false positive), hoàn thành fine-tune mô hình **`yolo11n.pt`** nhận diện **tán cọ dầu (class `palm`)** trên `plot_B03`.
+> - **Đạt tiêu chuẩn M2:** `mAP50 = 0.7319 >= 0.50` trên tập validation (`Precision = 0.7149`, `Recall = 0.7037`).
+> - **Xuất bàn giao WebGIS:** `data/outputs/detections.geojson` (**289 Features**, chuẩn Schema 4.4.B) và `data/outputs/palm_stats.json`.
 
-## 1. Thông số thực nghiệm chốt số liệu
+---
+
+## 1. Cơ Sở Khoa Học & Điều Chỉnh Kỹ Thuật
+
+| Tiêu chí so sánh | Hướng cũ: YOLO-COCO (`person`/`vehicle`) | Hướng mới: Fine-tuned YOLO (`palm`) |
+| :--- | :--- | :--- |
+| **Kích thước đối tượng** | Người ~0.5 m $\to$ **~12 px** (quá nhỏ đối với YOLO) | Tán cọ 2–12 m $\to$ **73–303 px** (TB ~114 px, tối ưu cho YOLO) |
+| **Độ phù hợp Dataset** | Không phù hợp góc nhìn nadir từ trên cao | Khớp mục tiêu dataset (Lammoglia et al., 2024: *"detect and count individual trees"*) |
+| **Kết quả thực nghiệm** | **Đã hủy bỏ toàn bộ** | **289 tán**, mật độ **115.33 cây/ha**, đạt Schema 4.4.B |
+
+### Các lỗi kỹ thuật quan trọng đã phát hiện và khắc phục:
+1. **Chuẩn hóa RGB (`scripts/extract_rgb.py`):** Dữ liệu gốc `multispectral_ortho.tif` là DN thô 16-bit chưa hiệu chuẩn bức xạ (`Blue p50=23525 > Red p50=16293`). Đã chuyển sang kéo tương phản chung (`stretch_rgb_joint`), đọc band qua `Description` (`Red=3, Green=2, Blue=1`), ghi kèm internal mask và ưu tiên đọc `cog_multispectral.tif` theo Hợp đồng 4.4.A.
+2. **Chất lượng bộ nhãn (`data/yolo_palm/`):** Loại bỏ hoàn toàn nhãn heuristic `ExG` cũ (từng gây lỗi bỏ sót cọ trưởng thành ngả tím và gán nhầm cỏ dại, chỉ đạt `mAP50 = 0.4240`), thay bằng **318 nhãn kiểm tra trực quan** (`264` Train trên 31 tile, `54` Val trên 6 tile, kèm 4 tile âm 0 nhãn; kiểm định 100% qua `scripts/test_dataset.py`).
+3. **Sửa siêu tham số train (`scripts/train_palm_yolo.py`):** Chuyển từ `batch=16` (chỉ 1 bước gradient/epoch) sang `batch=4, epochs=150, close_mosaic=15` giúp mô hình hội tụ thực sự (`mAP50` tăng từ `0.4240` lên `0.7319`).
+4. **Sửa lỗi truyền sai kênh RGB $\to$ BGR & lọc mảnh mép tile (`scripts/02_yolo_drone_detection.py`):** Ultralytics `model.predict(np.ndarray)` nhận đầu vào BGR như OpenCV `cv2.imread()`. Sau khi đảo `patch[:, :, ::-1]`, các tán cọ lớn màu sẫm được phát hiện đầy đủ, đồng thời bổ sung `suppress_tile_edge_fragments()` để loại bỏ các nửa box bị cắt tại đường viền chồng lấp 15% giữa các tile.
+
+---
+
+## 2. Kết Quả Huấn Luyện & Kiểm Định Validation (Giai đoạn 4 — Checkpoint M2)
+
+> **Lưu đối chiếu (baseline COCO cũ):** 12 box lớp `person` vẫn giữ tại `data/outputs/detections_person_baseline.geojson`. Kiểm tra thủ công cho thấy **đa số là dương tính giả** do domain gap (box nằm trên tán lá/đất trống, kích thước 0,23–26 m). File này **chỉ dùng để đối chiếu pipeline**, không dùng làm số liệu "số người phát hiện" trong báo cáo.
+
 - **Lệnh thực thi:**
   ```bash
-  python3 scripts/02_yolo_drone_detection.py --model yolov8m.pt --device cpu --tile-size 640 --overlap 0.15 --conf 0.25 --iou 0.50
+  python3 scripts/train_palm_yolo.py --model yolo11n.pt --batch 4 --epochs 150 --patience 35 --close-mosaic 15
   ```
-- **Thông số cấu hình:**
-  - Mô hình (`model`): `yolov8m.pt` (25.9M tham số).
-  - Thiết bị tính toán (`device`): **CPU** (Đồng nhất đa nền tảng macOS/Windows).
-  - Kích thước ô cắt (`tile_size`): $640 \times 640$ pixels.
-  - Độ chồng lấp (`overlap`): $15\%$ (bước nhảy 544 px) — *Đúng chuẩn Spec 4.3*.
-  - Ngưỡng độ tin cậy (`conf`): $0.25$ — *Đúng chuẩn Spec 4.3*.
-  - Ngưỡng khử trùng lặp (`iou`): $0.50$ (Class-Agnostic NMS) — *Đúng chuẩn Spec 4.3*.
-  - Tổng số ô quét: 81 ô (67 ô hợp lệ, 14 ô nền đen NoData được bỏ qua).
-  - Thời gian suy luận trên CPU: **7.67 giây** (trung bình 114.5 ms/ô).
+- **Cấu hình:** `yolo11n.pt` (2,597,051 tham số), `imgsz=640`, `batch=4`, `epochs=150` (`0.222` giờ trên CPU `Apple M1 Pro`).
+- **Tập dữ liệu:** 31 tile Train (`264` box, gồm 3 tile âm rỗng) / 6 tile Val (`54` box, gồm 1 tile âm `r003_c001`, 1 tile thưa `r003_c002`, 4 tile tán cọ `r002_c004`, `r004_c003`, `r006_c003`, `r006_c004`).
 
-## 2. Thống kê số liệu phát hiện (Dữ liệu nhất quán)
-Ba con số dữ liệu đã được đối chiếu và khớp nhau hoàn toàn:
-- **Số box thô hợp lệ trước NMS (`detections_raw.json`):** **16**
-- **Số box sau khử trùng lặp NMS (`IoU = 0.50`):** **12**
-- **Số Feature trong tệp GeoJSON (`detections.geojson`):** **12**
+| Lần chạy | Cấu hình & Nhãn | Precision (P) | Recall (R) | $mAP_{50}$ | $mAP_{50-95}$ | Kết luận M2 |
+| :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+| Thử nghiệm cũ (đã bỏ) | `batch=16`, 70 epoch, nhãn `ExG` | 0.3292 | 0.6726 | 0.4240 | 0.2013 | ❌ Chưa đạt (`< 0.50`) |
+| **Bản chính thức (`docs/best.pt`)** | **`batch=4`, 150 epoch, 318 nhãn trực quan** | **0.7149** | **0.7037** | **0.7319** | **0.3178** | ✅ **Đạt chuẩn M2** ($\ge 0.50$) |
 
-| Phân lớp chuẩn (Schema 4.4.B) | Số lượng baseline | Trạng thái sau duyệt (Minh, 26/11) | Ghi chú |
+| Phân lớp chuẩn (Schema 4.4.B) | Số lượng | Trạng thái | Ghi chú |
 | :--- | :---: | :--- | :--- |
-| `palm` | — | 🎯 **Class mục tiêu chính (fine-tune)** | Bổ sung vào Contract 4.4.B; nhánh Hinh sẽ xuất `detections.geojson` class `palm` ở Mốc M3 |
+| `palm` | **289** | 🎯 **Class mục tiêu chính (fine-tune)** | Xuất tại `data/outputs/detections.geojson`; đã bổ sung vào Contract 4.4.B |
 | `person` | 12 | 📦 Lưu baseline (`detections_person_baseline.geojson`) | Box COCO, **false positive** do domain gap — chỉ dùng đối chiếu pipeline, không dùng làm số liệu báo cáo |
 | `vehicle` | 0 | — | Không có phát hiện baseline |
 | `building`, `machinery`, `other` | 0 | — | Giữ trong whitelist 4.4.B |
-| **Tổng (baseline COCO)** | **12** | **Lưu tại `detections_person_baseline.geojson`** | Khớp 100% schema; không đồng nghĩa 12 người thật |
 
-## 3. Giới hạn kết quả và kiểm chứng thủ công
+- **Ghi nhận ma trận nhầm lẫn (`docs/confusion_matrix.png`):** Tại tập Val `54` nhãn, số lượng khớp đúng đạt **54/54** ở mức ngưỡng thấp nội bộ của YOLO `val` (khi tính kèm các ứng viên nền độ tin cậy thấp trước hậu xử lý; chi tiết trực quan xem `runs/palm_detect/yolo11n_palm/val_batch0_pred.jpg`, trong đó tile âm `r003_c001` hầu như sạch hoàn toàn và toàn bộ tán cọ lớn/trung bình đều nhận `conf = 0.6–0.9`).
 
-- **Kích thước box không hợp lệ về mặt vật lý.** Với pixel 0,0413 m, 12 box `person` có kích thước từ **5,6 × 6,2 px (0,23 × 0,26 m)** đến **91,3 × 636,1 px (3,8 × 26,3 m)**. Một người thực tế chỉ khoảng 0,4–0,6 m rộng × 1,6–1,8 m cao (≈ 10–15 × 39–44 px). Phần lớn box hoặc quá nhỏ, hoặc lớn hơn người hàng chục lần.
-- **Kiểm tra trực quan.** Cắt ảnh nguồn tại đúng 12 bounding box và phóng to: không box nào chứa người; nội dung là tán lá, đất trống, bóng cây và vùng rìa nền trắng. Các box lớn (#3, #5, #6, #9) phủ cả vùng nền/rìa ảnh.
-- **Phân bố bất thường.** Box tập trung ở rìa ảnh và trên tán rừng — nơi mô hình COCO thường phản ứng với kết cấu/độ tương phản, không phải vị trí có đối tượng.
-- **Kết luận.** Đây là false positive do domain gap; **không sử dụng 12 box này làm số liệu nhận diện thực địa**. Giá trị của kết quả nằm ở việc chứng minh pipeline (tiling → inference → NMS → pixel→GPS → GeoJSON) chạy đúng và đúng schema.
-- **Cách kiểm chứng lại:** mở `data/outputs/detections.geojson` trong QGIS hoặc geojson.io rồi đối chiếu với ảnh nguồn. Không lưu ảnh crop trong repo.
+---
 
-## 4. Phân tích giới hạn Domain Gap (Lý do lọc bỏ nhãn rác)
-- **Bản chất hiện tượng:** Mô hình YOLOv8 được tiền huấn luyện (pre-trained) trên tập dữ liệu COCO (chủ yếu là ảnh chụp phối cảnh ngang tầm mắt con người). Khi áp dụng trực tiếp mô hình này lên ảnh viễn thám UAV với góc nhìn thẳng đứng từ trên cao (nadir view) trên cánh đồng, xuất hiện sai lệch miền dữ liệu rõ rệt (**Domain Gap**).
-- **Hệ quả thực nghiệm:** Kết cấu bề mặt hình thái tròn xoăn của các khóm tán lá/cây bụi nhìn từ trên cao có đặc trưng thị giác tương đồng với các lớp `broccoli`, `potted plant` trong COCO; một số bóng phản xạ hoặc vật thể nhỏ bị gán nhầm thành `bird`, `handbag`, `umbrella`, `skateboard`. Đây hoàn toàn là các **dương tính giả (False Positives)** do lệch miền dữ liệu, không phải đặc trưng thực địa.
-- **Giải pháp xử lý:** Tuân thủ nghiêm ngặt Hợp đồng dữ liệu 4.4.B, áp dụng bộ lọc phân lớp (Class Filtering & Mapping): chỉ giữ lại các nhãn thuộc danh mục chuẩn (`vehicle`, `building`, `machinery`, `palm`, `person`, `other` — `palm` bổ sung từ 26/11 cho nhánh fine-tune tán cọ dầu), loại bỏ các nhãn nhiễu ngoài domain.
+## 3. Kết Quả Suy Luận Toàn Ảnh & Thống Kê Lâm Nghiệp (Giai đoạn 5)
 
-## 5. Giải trình các sai lệch kỹ thuật so với Spec gốc
-1. **Dữ liệu đầu vào (Tạm đọc Ortho EPSG:4326 thay vì COG):**
-   - *Lý do:* Theo tiến độ Sprint 7 ngày, tệp COG `data/outputs/cog_multispectral.tif` thuộc trách nhiệm của Nam Anh (TV2) xuất bản ở Ngày 01–02. Để không làm nghẽn tiến độ nhánh AI của Hinh, script được chạy trực tiếp trên file trực giao nguồn `data/orthomosaic/multispectral_ortho.tif` (có cùng toạ độ và kênh phổ).
-   - *Tính tương thích:* Mã nguồn `02_yolo_drone_detection.py` đã tích hợp sẵn cơ chế nhận diện tự động; khi Nam Anh bàn giao COG, hệ thống sẽ tự động ưu tiên nạp COG mà không cần sửa code.
-2. **Lựa chọn mô hình (`yolov8m.pt` thay vì `yolo11n.pt`):**
-   - *Lý do (có số liệu đối đầu thực nghiệm):* Đã thực nghiệm trực tiếp `yolo11n.pt` (Nano, 2.6M tham số) trên bộ ảnh với `conf=0.25`: mô hình nano quá nhỏ, không đủ năng lực biểu diễn để trích xuất vật thể nhỏ góc nhìn từ trên cao, dẫn đến **0 phát hiện** cho cả `person` lẫn `vehicle`.
-   - *Hiệu quả:* Mô hình `yolov8m.pt` (Medium, 25.9M tham số) cho ra 12 box lớp `person` trong 7.67 giây trên CPU, đủ để chạy demo pipeline. Tuy nhiên **chất lượng nhận diện chưa đạt**: các box là false positive do domain gap (Mục 3), nên không thể coi là "nhận diện chính xác".
-3. **Các tham số đã chuẩn hóa 100% về đúng Spec:**
-   - Độ chồng lấp: Đã đưa về đúng **15%** (bước nhảy 544 px).
-   - Ngưỡng IoU: Đã đưa về đúng **0.50**.
-   - Ngưỡng confidence: Đã đưa về đúng **0.25**.
+- **Lệnh thực thi:**
+  ```bash
+  python3 scripts/02_yolo_drone_detection.py --model docs/best.pt --conf 0.25 --iou 0.50
+  ```
+- **Nguồn ảnh & Tham số:** `data/outputs/ortho_rgb_3band.tif` (`4396 × 4411 px`, EPSG:4326, fallback từ `data/orthomosaic/multispectral_ortho.tif` do lần chạy đầu chưa có `cog_multispectral.tif`), tile `640×640`, overlap `15%`, `66/81` ô hợp lệ, thời gian suy luận CPU **`2.81 giây`** (`42.7 ms/ô`).
 
-## 6. Kiểm định Schema Hợp đồng dữ liệu 4.4.B
-Tệp `data/outputs/detections.geojson` đã được kiểm thử tự động bằng `scripts/test_outputs.py` và xác nhận đạt chuẩn **schema** 100% (chỉ kiểm tra cấu trúc/thuộc tính, **không** đánh giá độ chính xác nhận diện):
-```json
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [-5.1896773, 5.9275229],
-            [-5.1896637, 5.9275229],
-            [-5.1896637, 5.9275086],
-            [-5.1896773, 5.9275086],
-            [-5.1896773, 5.9275229]
-          ]
-        ]
-      },
-      "properties": {
-        "id": 1,
-        "class_name": "person",
-        "confidence": 0.48,
-        "tile_id": "r000_c004",
-        "center_lon": -5.1896773,
-        "center_lat": 5.9275229
-      }
-    }
-  ]
-}
-```
-- Không còn trường `center_gps` dạng mảng; đã tách độc lập thành `center_lon` và `center_lat`.
-- Bổ sung trường truy vết ô cắt `tile_id` (ví dụ `r000_c004`).
-- Thuộc tính `class_name` chỉ chứa nhãn nằm trong danh mục cho phép.
+### Vì sao loại bỏ baseline COCO (Domain Gap)
+- **Bản chất:** YOLOv8 tiền huấn luyện trên COCO (ảnh phối cảnh ngang tầm mắt); áp lên ảnh UAV nadir sinh sai lệch miền dữ liệu rõ rệt (**Domain Gap**).
+- **Hệ quả:** tán lá/cây bụi nhìn từ trên cao có đặc trưng thị giác giống `broccoli`, `potted plant`; bóng phản xạ bị gán nhầm thành `bird`, `handbag`, `umbrella`, `skateboard` → **dương tính giả**.
+- **Giải pháp:** lọc theo whitelist 4.4.B và chuyển sang fine-tune `palm` trên chính `plot_B03`.
+
+### Đối chiếu nhất quán 3 con số đầu ra:
+- **Số box thô hợp lệ trước NMS (`data/outputs/detections_raw.json`):** **`399`**
+- **Số tán sau NMS (`IoU = 0.50`) & lọc cắt mép tile:** **`289`**
+- **Số Feature trong tệp GeoJSON (`data/outputs/detections.geojson`):** **`289`** (khớp 100%)
+
+### Thống kê lâm nghiệp (`data/outputs/palm_stats.json`):
+| Chỉ số | Giá trị thực tế |
+| :--- | :---: |
+| **Tổng số tán phát hiện (`class_name = "palm"`)** | **289** |
+| **Diện tích hợp lệ lô plot_B03** | **2.5059 ha** |
+| **Mật độ tán cây** | **115.33 cây/ha** |
+| **Đường kính tán nhỏ nhất / Trung vị / Trung bình / Lớn nhất** | **2.07 m / 3.78 m / 4.49 m / 12.44 m** |
+
+---
+
+## 4. Kiểm Định Schema 4.4.B & Lưu Ý Trung Thực
+
+- Đã chạy kiểm thử tự động `python3 scripts/test_outputs.py`: **`detections.geojson` đạt chuẩn Schema 4.4.B 100%** (Polygon khép kín EPSG:4326 lon/lat, đủ 6 trường `id`, `class_name`, `confidence`, `tile_id`, `center_lon`, `center_lat`, `class_name` chỉ chứa `palm`). Ảnh trực quan toàn vùng: `docs/figures/detections_palm.jpg` (`3.11 MB`).
+- **Lưu ý trung thực (Mục 13 `docs/note_hinh_tan_cay.md`):**
+  1. Hình thái tán nhận diện là **tán dạng cọ hình sao (`palm`)**, bao gồm cả cây cọ dầu trưởng thành (*Elaeis guineensis*, tán 5–12 m) và các tán dạng cọ trẻ/cây một lá mầm hình sao (2–4.5 m) phân bố xen canh trên plot_B03, chưa có khảo sát thực địa trực tiếp tại Divo để phân biệt 100% loài cho nhóm cây non.
+  2. Trên máy Hinh hiện chưa có `data/outputs/cog_multispectral.tif` (EPSG:32630) nên script tự fallback sang `multispectral_ortho.tif` (EPSG:4326); mã nguồn đã sẵn sàng tự ưu tiên COG khi có tệp 4.4.A.

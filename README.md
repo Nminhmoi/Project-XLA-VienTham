@@ -463,15 +463,17 @@ NGÀY 07 — TỔNG DUYỆT & NỘP                ⭐ Checkpoint 4
 
 #### 👤 Hinh — YOLO Detection
 
-> 🔄 **Đã chốt đổi hướng (24/11):** dừng YOLO-COCO `person`/`vehicle` (12 box là false positive do domain gap, xem `docs/yolo_qa.md`), chuyển sang **fine-tune nhận diện tán cọ dầu (class `palm`)** trên plot_B03. Chi tiết và checklist: **`docs/note_hinh_tan_cay.md`**.
+> 🔄 **Đã chuyển hướng & hoàn tất pipeline mới (26/11):** Hủy bỏ kết quả YOLO-COCO cũ (false positive do domain gap), hoàn tất **fine-tune `yolo11n.pt` nhận diện tán cọ dầu (class `palm`)** trên plot_B03 (`mAP50 = 0.7319`, xuất 289 tán chuẩn Schema 4.4.B). Chi tiết: **`docs/yolo_qa.md`**, **`docs/cac_buoc_xu_ly_tan_cay.md`** & **`docs/note_hinh_tan_cay.md`**.
 
 | Mốc | Việc cụ thể | Output bàn giao | Xong |
 | :---: | :--- | :--- | :---: |
-| Tiền đề | • Minh duyệt thêm class `palm` vào contract 4.4.B (`README.md`, `scripts/test_outputs.py`, `docs/yolo_qa.md`).<br>• Đổi tên baseline cũ sang `data/outputs/detections_person_baseline.geojson`. | Contract đồng bộ 3 nơi + giữ file baseline đối chiếu. | ✅ |
-| M1 | • Cắt tile `640×640` overlap 15% (≥ 95% pixel hợp lệ) từ COG tái tạo; gán nhãn 15–20 tile (~400–700 tán cọ dầu, chia 80/20 theo tile). | Bộ dữ liệu `data/yolo_palm/` (`images/`, `labels/`, `data.yaml`). | ⬜ |
-| M2 | • Fine-tune `yolo11n.pt` / `yolo11s.pt` (`imgsz=640`, 60–80 epochs) trên Colab T4; đánh giá trên tập val. | `best.pt`, `results.csv`, `confusion_matrix.png` → lưu kết quả vào `docs/`. | ⬜ |
-| M3 (Ngày 06) | • Chạy inference bằng `best.pt` trên COG tái tạo, xuất `data/outputs/detections.geojson` class `palm`.<br>• Cập nhật `docs/yolo_qa.md` (precision/recall/mAP50, tổng tán, mật độ tán/ha) + viết mục báo cáo YOLO + ảnh minh họa. | `data/outputs/detections.geojson` (`palm`), `docs/yolo_qa.md` cập nhật, bản thảo báo cáo + ảnh overlay. | ⬜ |
-| Ngày 07 | • Trực nhánh AI khi demo. | Demo pipeline & kết quả `palm` trên WebGIS. | ⬜ |
+| 01 | • Cài `ultralytics`, tải base weights YOLO (`yolo11n.pt`).<br>• Dọn dẹp kết quả cũ, đồng bộ Schema 4.4.B (thêm class `palm`). | `docs/yolo_setup.md`, `scripts/test_outputs.py`. | ✅ |
+| 02 | • Cắt tile 640×640 overlap 15% (ưu tiên COG 4.4.A, stretch chung, mask nội bộ) → Lập bộ dữ liệu **318 nhãn `palm`** kiểm tra trực quan (`31 train / 6 val`). | `data/yolo_palm/` (nhãn + `data.yaml`), `scripts/extract_rgb.py`, `scripts/prepare_palm_dataset.py`, `scripts/test_dataset.py`. | ✅ |
+| 03 | • Fine-tune `yolo11n.pt` (`batch=4`, `epochs=150`), đạt **`mAP50 = 0.7319`** (`P = 0.7149`, `R = 0.7037`). | `docs/best.pt`, `docs/results.csv`, `docs/confusion_matrix.png`. | ✅ |
+| 04 | • Chạy inference toàn ảnh `02_yolo_drone_detection.py` (`conf=0.25`, `iou=0.50`, lọc mép tile & NoData), chuyển pixel → GPS, xuất GeoJSON 4.4.B. | `data/outputs/detections.geojson` (**289 Features** `palm`), `data/outputs/detections_raw.json` (399 thô). | ✅ |
+| 05 | • QA: thống kê **289 cây**, diện tích **2.5059 ha**, mật độ **115.33 cây/ha**, đường kính tán TB **4.49 m**; kiểm thử Schema 4.4.B pass 100%. | `docs/yolo_qa.md`, `data/outputs/palm_stats.json`, `docs/figures/detections_palm.jpg`. | ✅ |
+| 06 | • Viết mục báo cáo YOLO (kiến trúc, tiling, NMS, affine transform, fine-tuning cọ dầu). | Bản thảo mục YOLO gửi Minh (Markdown/Docx) + ảnh minh họa. | 🔄 |
+| 07 | • Trực nhánh AI khi demo. | Sẵn sàng demo pipeline. | 🔄 |
 
 #### 👤 Quang Anh — NDVI/NDRE & LULC + Notebook demo
 

@@ -1,0 +1,15 @@
+{
+  "total_palms": 289,
+  "valid_area_ha": 2.5059,
+  "density_per_ha": 115.33,
+  "pixel_size_m": [
+    0.04119,
+    0.04152
+  ],
+  "crown_diameter_m": {
+    "min": 2.07,
+    "mean": 4.49,
+    "median": 3.78,
+    "max": 12.44
+  }
+}

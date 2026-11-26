@@ -4,7 +4,9 @@ __pycache__/
 *$py.class
 *.so
 *.pt
+!docs/best.pt
 *.pth
+runs/
 
 # Virtual Environment
 venv/
@@ -41,3 +43,8 @@ data/outputs/*
 
 # Raw drone images (shared via Drive)
 plot_B03/
+
+# YOLO palm dataset: chỉ commit nhãn + cấu hình.
+# Ảnh tile cắt lại được từ COG bằng prepare_palm_dataset.py (seed=42) nên không commit.
+!data/yolo_palm/
+data/yolo_palm/images/
