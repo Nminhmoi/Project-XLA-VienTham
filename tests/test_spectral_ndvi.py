@@ -78,11 +78,49 @@ def test_uint16_subtraction_does_not_wrap():
 
 
 @pytest.mark.parametrize("ndvi, expected", [
-    (0.9, 1), (0.4501, 1), (0.45, 2), (0.30, 2), (0.20, 2), (0.1999, 3), (0.0, 3),
-    (-0.0001, 4), (-0.8, 4), (np.nan, 0),
+    # mặc định (0.40, 0.10, -0.15): >t1 -> 1 ; (t2, t1] -> 2 ; [t3, t2] -> 3 ; <t3 -> 4
+    (0.9, 1), (0.4001, 1), (0.40, 2), (0.25, 2), (0.1001, 2), (0.10, 3), (0.0, 3),
+    (-0.15, 3), (-0.1501, 4), (-0.8, 4), (np.nan, 0),
 ])
-def test_classify_thresholds(ndvi, expected):
-    assert spectral.classify_ndvi(np.array([[ndvi]], np.float32))[0, 0] == expected
+def test_classify_default_thresholds(ndvi, expected):
+    v = np.array([[ndvi]], np.float32)
+    # so sánh trên float32 như dữ liệu thật
+    assert spectral.classify_ndvi(v)[0, 0] == expected
+
+
+@pytest.mark.parametrize("ndvi, expected", [
+    (0.4501, 1), (0.45, 2), (0.20, 3), (0.0, 3), (-0.0001, 4),
+])
+def test_classify_custom_thresholds(ndvi, expected):
+    assert spectral.classify_ndvi(np.array([[ndvi]], np.float32), (0.45, 0.20, 0.0))[0, 0] == expected
+
+
+@pytest.mark.parametrize("bad", [(0.1, 0.4, -0.15), (0.4, 0.4, 0.0), (1.2, 0.1, 0.0), (0.4, 0.1, -1.5)])
+def test_invalid_thresholds_rejected(bad):
+    with pytest.raises(ValueError):
+        spectral.validate_thresholds(bad)
+
+
+def test_otsu_splits_bimodal_data():
+    rng = np.random.default_rng(0)
+    soil = rng.normal(-0.33, 0.05, 50_000)
+    veg = rng.normal(0.45, 0.05, 50_000)
+    t = spectral.otsu_threshold(np.concatenate([soil, veg]).astype(np.float32))
+    assert -0.15 < t < 0.25                 # nằm giữa 2 đỉnh
+
+
+def test_suggest_thresholds_ordered_with_nan():
+    rng = np.random.default_rng(1)
+    v = np.concatenate([rng.normal(-0.33, 0.08, 40_000), rng.normal(0.45, 0.08, 60_000),
+                        [np.nan] * 100]).astype(np.float32)
+    t1, t2, t3 = spectral.suggest_thresholds(v)
+    assert 1 > t1 > t2 > t3 > -1
+    spectral.validate_thresholds((t1, t2, t3))
+
+
+def test_class_ranges_follow_thresholds():
+    rng = {cid: r for cid, _, r in spectral.lulc_classes((0.42, 0.17, -0.14))}
+    assert rng == {1: [0.42, 1.0], 2: [0.17, 0.42], 3: [-0.14, 0.17], 4: [-1.0, -0.14]}
 
 
 def test_outputs_exist_and_are_georeferenced(scene):
@@ -186,3 +224,26 @@ def test_rejects_geographic_crs(tmp_path):
 
 def test_cli_missing_input_returns_error(tmp_path):
     assert spectral.main(["--input", str(tmp_path / "nope.tif"), "--outdir", str(tmp_path)]) == 1
+
+
+def test_cli_custom_thresholds_written_to_summary(tmp_path):
+    h, w = 2, 2
+    path = make_cog(tmp_path / "cog.tif", np.full((h, w), 1000), np.full((h, w), 500),
+                    np.full((h, w), 600), np.ones((h, w), bool))   # NDVI = 0.3333
+    out = tmp_path / "out"
+    assert spectral.main(["--input", str(path), "--outdir", str(out), "--thresholds", "0.30", "0.20", "0.0"]) == 0
+    s = json.loads((out / "lulc_summary.json").read_text(encoding="utf-8"))
+    assert s["ndvi_thresholds"] == [0.30, 0.20, 0.0]
+    assert s["classes"][0]["pixel_count"] == 4          # 0.333 > 0.30 -> lớp 1
+    assert s["classes"][0]["ndvi_range"] == [0.30, 1.0]
+
+
+def test_cli_suggest_thresholds_needs_ndvi(tmp_path):
+    assert spectral.main(["--suggest-thresholds", "--outdir", str(tmp_path)]) == 1
+
+
+def test_cli_rejects_bad_thresholds(tmp_path):
+    a = np.full((2, 2), 1000)
+    path = make_cog(tmp_path / "cog.tif", a, a, a, np.ones((2, 2), bool))
+    assert spectral.main(["--input", str(path), "--outdir", str(tmp_path / "o"),
+                          "--thresholds", "0.1", "0.4", "0.0"]) == 2
