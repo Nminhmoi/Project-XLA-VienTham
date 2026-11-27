@@ -9,7 +9,7 @@
   Các thư viện cốt lõi của nhánh AI: `ultralytics`, `torch`, `torchvision`, `rasterio`, `pyproj`, `pillow`, `opencv-python`, `numpy`, `pyyaml`.
 
 ## 2. Mô hình nhận diện
-- **Hướng hiện tại:** Fine-tune **`yolo11n.pt`** (hoặc `yolo11s.pt`) để nhận diện chuyên biệt **tán cọ dầu (class `palm`)** trên plot_B03 (xem `Docs/note_hinh_tan_cay.md`).
+- **Hướng hiện tại:** Fine-tune **`yolo11n.pt`** (hoặc `yolo11s.pt`) để nhận diện chuyên biệt **tán cọ dầu (class `palm`)** trên plot_B03 (xem `docs/note_hinh_tan_cay.md`).
 - **Weights sau fine-tune:** Lưu tại `docs/best.pt`.
 - **Thiết bị suy luận:** **CPU** (đảm bảo đồng nhất trên macOS và Windows).
 

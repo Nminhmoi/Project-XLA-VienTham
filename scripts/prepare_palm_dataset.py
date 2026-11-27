@@ -2,7 +2,7 @@
 """
 Trích xuất và chuẩn bị bộ dữ liệu cắt tile phục vụ gán nhãn YOLO Tán Cọ Dầu (Palm)
 Tác giả: Dương Hữu Hinh
-Tuân thủ: Docs/note_hinh_tan_cay.md (tile 640x640, overlap 15%, >=95% pixel hợp lệ, chia 80/20 theo tile)
+Tuân thủ: docs/note_hinh_tan_cay.md (tile 640x640, overlap 15%, >=95% pixel hợp lệ, chia 80/20 theo tile)
 """
 
 import argparse

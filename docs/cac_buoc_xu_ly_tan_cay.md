@@ -1,6 +1,6 @@
 # Kế Hoạch & Các Bước Xử Lý: Nhận Diện Tán Cọ Dầu (Palm Tree Detection) Bằng YOLO
 
-> **Tài liệu tham chiếu:** `Docs/note_hinh_tan_cay.md`  
+> **Tài liệu tham chiếu:** `docs/note_hinh_tan_cay.md`  
 > **Người thực hiện:** Hinh (Nhánh AI / YOLO)  
 > **Người duyệt:** Minh / User  
 > **Dữ liệu thực nghiệm:** Plot B03 (`data/orthomosaic/multispectral_ortho.tif` / `data/outputs/ortho_rgb_3band.tif`)  

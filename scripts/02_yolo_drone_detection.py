@@ -34,7 +34,7 @@ from extract_rgb import extract_and_stretch_rgb, resolve_input_raster
 
 DEFAULT_MODEL_PATH = "docs/best.pt"
 
-# Quy ước ánh xạ nhãn theo Docs/note_hinh_tan_cay.md (mặc định nhận class palm)
+# Quy ước ánh xạ nhãn theo docs/note_hinh_tan_cay.md (mặc định nhận class palm)
 PALM_CLASS_ALIASES = {"palm", "oil_palm", "tree", "0"}
 COLOR_MAP = {
     "palm": "#00FF00",       # Xanh lá Neon (nổi bật trên nền tán cây)

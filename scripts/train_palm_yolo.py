@@ -2,7 +2,7 @@
 """
 Giai đoạn 4: Huấn luyện Fine-tune mô hình YOLO nhận diện Tán Cọ Dầu (Palm)
 Tác giả: Dương Hữu Hinh
-Tuân thủ: Docs/note_hinh_tan_cay.md (Mục 8) & docs/cac_buoc_xu_ly_tan_cay.md
+Tuân thủ: docs/note_hinh_tan_cay.md (Mục 8) & docs/cac_buoc_xu_ly_tan_cay.md
 """
 
 import argparse
