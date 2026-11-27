@@ -44,18 +44,15 @@ Output trong `data/outputs/`:
 
 ## Chọn lớp và ngưỡng LULC
 
-Bộ lớp ban đầu (Cây tốt / Cỏ / Đất–nhà cửa / Nước, ngưỡng 0,45 / 0,20 / 0) không hợp với dataset:
+Khu vực là đồn điền cọ dầu xen rừng và một khoảnh đất đã phát quang ở tây bắc; bề mặt chỉ gồm thực vật và đất. 4 lớp theo dải chuyển tiếp từ tán dày đến đất lộ: **1 Cây xanh tốt · 2 Thảm cỏ / cây bụi · 3 Thực vật thưa / khô · 4 Đất trống / đất lộ**.
 
-- Đối chiếu ảnh RGB: **không có mặt nước, không có nhà cửa**. Mảng 26 % bị xếp "Nước" ở tây bắc thực ra là đất trống / thảm khô (Red cao ~28 200, NIR thấp ~18 000 DN).
-- Ảnh **chưa hiệu chuẩn phản xạ** nên NDVI tính trên DN; đất trống ra NDVI âm, ngưỡng lý thuyết (đất 0–0,2) không dùng được.
+Ảnh **chưa hiệu chuẩn phản xạ** nên NDVI tính trên DN; đất trống ra NDVI âm (Red cao ~28 200, NIR thấp ~18 000 DN), ngưỡng lý thuyết (đất 0–0,2) không dùng được → chọn ngưỡng theo phân bố của chính ảnh.
 
-Đổi sang 4 lớp hợp với rừng: **1 Cây xanh tốt · 2 Thảm cỏ / cây bụi · 3 Thực vật thưa / khô · 4 Đất trống / đất lộ**.
-
-Histogram NDVI có 2 đỉnh (đất ~ −0,33; thực vật ~ 0,45). Ngưỡng cũ 0,45 cắt đúng đỉnh thực vật nên ranh lớp 1/2 tùy tiện. Đã thử 3 bộ ngưỡng:
+Histogram NDVI có 2 đỉnh (đất ~ −0,33; thực vật ~ 0,45). Ngưỡng lý thuyết 0,45 cắt đúng đỉnh thực vật nên ranh lớp 1/2 tùy tiện. Đã thử 3 bộ ngưỡng:
 
 | Phương án | t1 / t2 / t3 | Cây tốt | Cỏ/bụi | Thưa/khô | Đất |
 | :--- | :--- | ---: | ---: | ---: | ---: |
-| A — ngưỡng ban đầu | 0,45 / 0,20 / 0,00 | 29,5 % | 33,7 % | 10,6 % | 26,3 % |
+| A — ngưỡng lý thuyết | 0,45 / 0,20 / 0,00 | 29,5 % | 33,7 % | 10,6 % | 26,3 % |
 | B — k-means 4 cụm | 0,42 / 0,17 / −0,14 | 35,3 % | 29,8 % | 14,9 % | 19,9 % |
 | **C — Otsu phân tầng (chọn)** | **0,40 / 0,10 / −0,15** | **39,0 %** | **30,1 %** | **11,5 %** | **19,4 %** |
 

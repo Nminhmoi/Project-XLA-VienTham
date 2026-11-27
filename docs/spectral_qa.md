@@ -52,9 +52,6 @@ Kiểm tra (đều ✅):
 - Lớp 4 có Red > NIR, Blue cao, đường phổ phẳng/giảm → đặc trưng đất trống; trên DN chưa hiệu chuẩn nên NDVI âm.
 - Lớp 3 có phổ gần phẳng (Red ≈ RedEdge ≈ NIR) → hỗn hợp đất + thực vật khô, đúng vai trò lớp chuyển tiếp.
 - NDRE lớp 1 > lớp 4 (0,080 > −0,042).
-
-Không có lớp nào có phổ giống nước (NIR rất thấp, thấp hơn mọi band nhìn thấy) → xác nhận bỏ lớp "Mặt nước" là đúng.
-
 ## 4. Đối chiếu NDVI với ảnh RGB
 
 **Định lượng.** Tương quan giữa NDVI và chỉ số xanh chỉ dùng kênh nhìn thấy ExG = (2G − R − B)/(R + G + B), trên 500 000 pixel mẫu: **Pearson r = 0,638** ✅ — vùng NDVI cao trùng vùng "xanh" trên RGB.
